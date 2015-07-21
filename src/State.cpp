@@ -93,6 +93,11 @@ void StateMachine::init(State* initState)
 
 void StateMachine::start()
 {
+    serialization::Event ev;
+    ev.id = currentState->getId();
+    ev.type = serialization::StateChanged;
+    events.push_back(ev);
+    
     currentState->enter();
     currentState->execute();
 };
