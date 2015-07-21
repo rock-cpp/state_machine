@@ -19,6 +19,8 @@ state_machine::serialization::Transition::Transition(const state_machine::Transi
         from = State(*(trans.prev));
     }
     
+    name = trans.getName();
+    
     id = trans.getId();
 }
 
