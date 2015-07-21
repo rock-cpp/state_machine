@@ -1,0 +1,9 @@
+rock_library(state_machine_viz
+    SOURCES 
+        StateMachineWidget.cpp
+    HEADERS 
+        StateMachineWidget.hpp
+    DEPS_PKGCONFIG
+        QGVCore
+        base-types
+)

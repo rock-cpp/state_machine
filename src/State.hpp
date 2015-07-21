@@ -7,6 +7,7 @@
 #include <iostream>
 #include <sstream>
 #include <functional>
+#include "Events.hpp"
 
 namespace state_machine
 {
@@ -15,7 +16,6 @@ namespace state_machine
 class State;
 class Transition;
 class StateMachine;
-
 /**
  * This class represents a single State. Every state has a enter, execute and exit function. The functions are called like the names suggest. Every state has to have a individual id. This id is used 
 to display the StateMachine in the GUI
@@ -25,7 +25,6 @@ class State
 public:
     State(const std::string &name);
     virtual ~State() {};
-    const int id;
     virtual void enter() = 0;
     virtual void exit() = 0;
     virtual void executeFunction() = 0;
@@ -43,6 +42,11 @@ public:
     void autoDestroy(bool deleteIt);
 
     const std::string &getName() const;
+    
+    const unsigned int getId() const
+    {
+        return id;
+    }
 
     const std::vector<Transition*> &getTransitions() const
     {
@@ -50,6 +54,7 @@ public:
     }
     
 protected:
+    const unsigned int id;
     std::vector<Transition*> transitions;
 
     std::ostream &msg;
@@ -69,8 +74,7 @@ private:
 class Transition
 {
 public:
-    Transition(const std::string &name, State *prev, State *next, std::function<bool()> guard) :
-        prev(prev), next(next), guard(guard), name(name) {};
+    Transition(const std::string &name, State *prev, State *next, std::function<bool()> guard);
     ~Transition() {};
     State *prev;
     State *next;
@@ -79,9 +83,15 @@ public:
     {
         return name;
     }
+
+    const unsigned int getId() const
+    {
+        return id;
+    }
+
 private:
     std::string name;
-    int id;
+    const unsigned int id;
 };
 
 /**
@@ -119,23 +129,35 @@ public:
     void registerTransition(Transition *tr);
     void deregisterTransition(Transition *tr);
     
-    int getNewId();
+    unsigned int getNewStateId();
+    unsigned int getNewTransitionId();
     
     const std::map<State *, std::string> &getAllStates() const
     {
         return states;
     };
     
+    std::vector<serialization::Event> getNewEvents()
+    {
+        std::vector<serialization::Event> newOnes = events;
+        events.clear();
+        return newOnes;
+    }
+    
+    void transitionTriggered(Transition *tr);
+    
 private:
     std::map<State *, std::string> states;
     std::map<Transition *, std::string> transistions;
+    std::vector<serialization::Event> events;
     
     std::stringstream debugStream;
     
     State* currentState;
     base::Time executionStep;
     
-    int idCounter;
+    unsigned int idCounterState;
+    unsigned int idCounterTransition;
     
     ~StateMachine() {};
     StateMachine();
