@@ -34,17 +34,15 @@ void StateMachineWidget::update(const state_machine::serialization::Event &event
     {
         case state_machine::serialization::StateChanged:
         {
-            std::cout << "Got state change to " << event.id << std::endl;
-            if(activeState > 0)
+            if(activeState >= 0)
             {
                 idToState[activeState]->setAttribute("color", "black");
             }
             
-            activeState = event.id;
             auto s = idToState.find(event.id);
             if(s != idToState.end())
             {
-                std::cout << "Found state " << std::endl;
+                activeState = event.id;
                 idToState[activeState]->setAttribute("color", "blue");
             }
             else
@@ -55,21 +53,19 @@ void StateMachineWidget::update(const state_machine::serialization::Event &event
             break;
         case state_machine::serialization::TransitionTriggered:
         {
-            std::cout << "Got Transition trigger from " << activeTransition << " to " << event.id << std::endl;
-            if(activeTransition > 0)
+            if(activeTransition >= 0)
             {
                 idToTransition[activeTransition]->setAttribute("color", "black");
             }
-            activeTransition = event.id;
-            auto trans = idToTransition.find(activeTransition);
+            auto trans = idToTransition.find(event.id);
             if(trans != idToTransition.end())
             {
-                std::cout << "Transition is " << idToTransition[activeTransition]->label().toStdString() << std::endl;
-                idToTransition[activeTransition]->setAttribute("color", "blue");
+                activeTransition = event.id;
+                idToTransition[activeTransition]->setAttribute("color", "red");
             }
             else
             {
-                std::cout << "Error unknown transition " << activeTransition << std::endl;
+                std::cout << "Error unknown transition " << event.id << std::endl;
             }
         }
             break;
