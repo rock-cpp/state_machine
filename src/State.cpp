@@ -98,7 +98,7 @@ void StateMachine::start()
     ev.type = serialization::StateChanged;
     events.push_back(ev);
     
-    currentState->enter();
+    currentState->enter(nullptr);
     currentState->execute();
 };
 
@@ -139,7 +139,7 @@ State* State::execute()
             
             std::cout << "Transition triggered. Leaving state " << getName() << " and entering state " << transition->next->getName() << std::endl;
             this->exit();
-            transition->next->enter();
+            transition->next->enter(this);
     //         this->helper->message("$:" + std::to_string(transition->id) + ":" + std::to_string(transition->next->id));
 
             //also call execute at least once

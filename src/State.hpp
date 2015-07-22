@@ -25,7 +25,7 @@ class State
 public:
     State(const std::string &name);
     virtual ~State() {};
-    virtual void enter() = 0;
+    virtual void enter(const State *lastState) = 0;
     virtual void exit() = 0;
     virtual void executeFunction() = 0;
     State* execute();
