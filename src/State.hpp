@@ -31,6 +31,10 @@ public:
     State* execute();
     Transition *addEdge(const std::string &name, State* next, std::function<bool()> guard);
   
+    void registerSubState(State *subState);
+    
+    void executeSubState(state_machine::State* subState);
+    
     /**
      * Returns if the state should be deleted, if it is left
      * */
@@ -53,10 +57,24 @@ public:
         return transitions;
     }
     
-protected:
-    const unsigned int id;
-    std::vector<Transition*> transitions;
+    class SubState
+    {
+    public:
+        State *state;
+        Transition *toSubState;
+    };
 
+    const std::vector<SubState> &getSubStates() const
+    {
+        return subStates;
+    }
+    
+protected:
+    
+    
+    const unsigned int id;
+    std::vector<Transition *> transitions;
+    std::vector<SubState> subStates;
     std::ostream &msg;
 
     bool destroyOnExit;
@@ -107,9 +125,16 @@ public:
         return instance;
     };
     bool execute();
+    void executeSubState(state_machine::State* subState);
+    
     void init(State* initState);
     void start();
 
+    /**
+     * Callback, that gets called every time execute is called
+     * */
+    void setExecuteCallback(std::function<void()> loopCallback);
+    
     base::Time lastUpdate;
     base::Time timePassed;
     
@@ -155,6 +180,8 @@ private:
     
     State* currentState;
     base::Time executionStep;
+    
+    std::function<void()> executeCallback;
     
     unsigned int idCounterState;
     unsigned int idCounterTransition;

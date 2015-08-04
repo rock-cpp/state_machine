@@ -17,6 +17,8 @@ StateMachine::StateMachine() : currentState(nullptr), idCounterState(0), idCount
 {
     double frequency = boost::lexical_cast<double>(Config::getConfig().getValue("executeFrequency"));
     executionStep = base::Time::fromSeconds( 1.0 / frequency);
+    
+    executeCallback = [](){};
 }
 
 /* 
@@ -30,16 +32,13 @@ bool StateMachine::execute()
 
     if(newState != currentState)
     {
-        serialization::Event ev;
-        ev.id = newState->getId();
-        ev.type = serialization::StateChanged;
-        events.push_back(ev);
-        
         if(currentState->autoDestroy())
             delete currentState;
     }
     
     currentState = newState; 
+    
+    executeCallback();
     
     timePassed = base::Time::now() - lastUpdate;
     //   helper->message("Executed in " + std::to_string(timePassed.toMicroseconds()) + " µs");
@@ -48,6 +47,44 @@ bool StateMachine::execute()
         usleep((executionStep - timePassed).toMicroseconds());
     }
     return false;
+}
+
+void StateMachine::executeSubState(State* subState)
+{
+    State *executingState = currentState;
+    
+    State::SubState sub;
+    bool found = false;
+    for(const State::SubState &s : currentState->getSubStates())
+    {
+        if(currentState == s.state)
+        {
+            found = true;
+            sub = s;
+            break;
+        }
+    }
+    
+    if(!found)
+    {
+        throw std::runtime_error("Error, subState was executed, that never got registered");
+    }
+    
+    StateMachine::getInstance().transitionTriggered(sub.toSubState);
+
+    currentState->enter(executingState);
+    currentState = subState;
+    
+    while(currentState != executingState)
+    {
+        execute();
+
+    }
+}
+
+void StateMachine::setExecuteCallback(std::function< void () > loopCallback)
+{
+    executeCallback = loopCallback;
 }
 
 unsigned int StateMachine::getNewStateId()
@@ -70,8 +107,11 @@ void StateMachine::transitionTriggered(Transition* tr)
     serialization::Event ev;
     ev.id = tr->getId();
     ev.type = serialization::TransitionTriggered;
-    
     events.push_back(ev);    
+    
+    ev.id = tr->next->getId();
+    ev.type = serialization::StateChanged;
+    events.push_back(ev);
 }
 
 void StateMachine::registerState(State* state)
@@ -122,6 +162,14 @@ void State::autoDestroy(bool deleteIt)
     destroyOnExit = deleteIt;
 }
 
+void State::registerSubState(State* subState)
+{
+    State::SubState sub;
+    sub.state = subState;
+    sub.toSubState = addEdge("To" + subState->getName(), subState, [](){return false;});
+    subStates.push_back(sub);
+}
+
 
 State* State::execute() 
 {
@@ -137,7 +185,7 @@ State* State::execute()
             
             StateMachine::getInstance().transitionTriggered(transition);
             
-            std::cout << "Transition triggered. Leaving state " << getName() << " and entering state " << transition->next->getName() << std::endl;
+            msg << "Transition " << transition->getName() << " triggered. Leaving state " << getName() << " and entering state " << transition->next->getName() << std::endl;
             this->exit();
             transition->next->enter(this);
     //         this->helper->message("$:" + std::to_string(transition->id) + ":" + std::to_string(transition->next->id));
@@ -151,6 +199,11 @@ State* State::execute()
     
     executeFunction();
     return this;
+}
+
+void State::executeSubState(State *subState)
+{
+    StateMachine::getInstance().executeSubState(subState);
 }
 
 Transition *State::addEdge(const std::string &name, State* next, std::function<bool()> guard) 
