@@ -1,5 +1,7 @@
 #include "Events.hpp"
 #include "State.hpp"
+#include "Transition.hpp"
+#include "StateMachine.hpp"
 
 state_machine::serialization::State::State(const state_machine::State& state)
 {
