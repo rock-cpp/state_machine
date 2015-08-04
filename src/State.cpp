@@ -35,35 +35,14 @@ void State::registerSubState(State* subState)
     subStates.push_back(sub);
 }
 
-
-State* State::execute() 
+Transition* State::checkTransitions() const
 {
-//     for(auto iter = helper->allTaskStatesReader.begin(); iter != helper->allTaskStatesReader.end(); ++iter)
-//     {
-//       if(iter->second->read(helper->allTaskStates[iter->first]) == RTT::NoData) {
-//         helper->allTaskStates[iter->first] = iter->first->getTaskState();
-//       }
-//     }
-//     helper->sendTaskStatus();
     for (Transition* transition : transitions) {
         if (transition->guard()){
-            
-            StateMachine::getInstance().transitionTriggered(transition);
-            
-            msg << "Transition " << transition->getName() << " triggered. Leaving state " << getName() << " and entering state " << transition->next->getName() << std::endl;
-            this->exit();
-            transition->next->enter(this);
-    //         this->helper->message("$:" + std::to_string(transition->id) + ":" + std::to_string(transition->next->id));
-
-            //also call execute at least once
-            transition->next->executeFunction();
-            
-            return transition->next;
+            return transition;
         }
     }
-    
-    executeFunction();
-    return this;
+    return nullptr;
 }
 
 void State::executeSubState(State *subState)

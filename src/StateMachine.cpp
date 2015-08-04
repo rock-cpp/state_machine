@@ -22,16 +22,22 @@ bool StateMachine::execute()
 {
     lastUpdate = base::Time::now();
     
-    State *newState = currentState->execute();
-
-    if(newState != currentState)
+    Transition *transition = currentState->checkTransitions();
+    
+    if(transition)
     {
+        transitionTriggered(transition);
+        currentState->exit();
+        transition->next->enter(currentState);
+
         if(currentState->autoDestroy())
             delete currentState;
+        
+        currentState = transition->next;
     }
     
-    currentState = newState; 
-    
+    currentState->executeFunction();
+
     executeCallback();
     
     timePassed = base::Time::now() - lastUpdate;
@@ -51,7 +57,7 @@ void StateMachine::executeSubState(State* subState)
     bool found = false;
     for(const State::SubState &s : currentState->getSubStates())
     {
-        if(currentState == s.state)
+        if(subState == s.state)
         {
             found = true;
             sub = s;
@@ -64,15 +70,50 @@ void StateMachine::executeSubState(State* subState)
         throw std::runtime_error("Error, subState was executed, that never got registered");
     }
     
-    StateMachine::getInstance().transitionTriggered(sub.toSubState);
+    transitionTriggered(sub.toSubState);
 
-    currentState->enter(executingState);
     currentState = subState;
+    currentState->enter(executingState);
     
     while(currentState != executingState)
     {
-        execute();
+        lastUpdate = base::Time::now();
+        
+        Transition *transition = currentState->checkTransitions();
+        
+        if(transition)
+        {
+            
+            transitionTriggered(transition);
+            currentState->exit();
+            if(transition->next == executingState)
+            {
+                if(currentState->autoDestroy())
+                    delete currentState;
+                
+                currentState = transition->next;
+                
+                return;
+            }
+            
+            transition->next->enter(currentState);
 
+            if(currentState->autoDestroy())
+                delete currentState;
+            
+            currentState = transition->next;
+        }
+        
+        
+        currentState->executeFunction();
+
+        executeCallback();
+        
+        timePassed = base::Time::now() - lastUpdate;
+        if (timePassed < executionStep) 
+        {
+            usleep((executionStep - timePassed).toMicroseconds());
+        }
     }
 }
 
@@ -98,6 +139,8 @@ unsigned int StateMachine::getNewTransitionId()
 
 void StateMachine::transitionTriggered(Transition* tr)
 {
+    debugStream << "Transition " << tr->getName() << " triggered. Leaving state " << currentState->getName() << " and entering state " << tr->next->getName() << std::endl;
+
     serialization::Event ev;
     ev.id = tr->getId();
     ev.type = serialization::TransitionTriggered;
@@ -118,22 +161,20 @@ void StateMachine::deRegisterState(State* state)
     states.erase(state);
 }
 
-
-void StateMachine::init(State* initState)
+void StateMachine::start(State* initState)
 {
     currentState = initState;
-    lastUpdate = base::Time::now();
-}
-
-void StateMachine::start()
-{
+    
     serialization::Event ev;
     ev.id = currentState->getId();
     ev.type = serialization::StateChanged;
     events.push_back(ev);
+
+    lastUpdate = base::Time::now();
     
     currentState->enter(nullptr);
-    currentState->execute();
+    
+    currentState->executeFunction();
 };
 
 }

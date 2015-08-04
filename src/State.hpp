@@ -24,7 +24,6 @@ public:
     virtual void enter(const State *lastState) = 0;
     virtual void exit() = 0;
     virtual void executeFunction() = 0;
-    State* execute();
     Transition *addEdge(const std::string &name, State* next, std::function<bool()> guard);
   
     void registerSubState(State *subState);
@@ -64,6 +63,9 @@ public:
     {
         return subStates;
     }
+    
+    Transition *checkTransitions() const;
+    
     
 protected:
     
