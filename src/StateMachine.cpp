@@ -28,7 +28,7 @@ bool StateMachine::execute()
     {
         transitionTriggered(transition);
         currentState->exit();
-        transition->next->enter(currentState);
+        transition->next->enterExt(currentState);
 
         if(currentState->autoDestroy())
             delete currentState;
@@ -73,9 +73,9 @@ void StateMachine::executeSubState(State* subState)
     transitionTriggered(sub.toSubState);
 
     currentState = subState;
-    currentState->enter(executingState);
+    currentState->enterExt(executingState);
     
-    while(currentState != executingState)
+    while(true)
     {
         lastUpdate = base::Time::now();
         
@@ -96,7 +96,7 @@ void StateMachine::executeSubState(State* subState)
                 return;
             }
             
-            transition->next->enter(currentState);
+            transition->next->enterExt(currentState);
 
             if(currentState->autoDestroy())
                 delete currentState;
@@ -172,7 +172,7 @@ void StateMachine::start(State* initState)
 
     lastUpdate = base::Time::now();
     
-    currentState->enter(nullptr);
+    currentState->enterExt(nullptr);
     
     currentState->executeFunction();
 };

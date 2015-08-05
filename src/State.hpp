@@ -20,12 +20,15 @@ class State
 {
 public:
     State(const std::string &name);
+    State(const std::string &name, State *success);
+    State(const std::string &name, State *success, State *failue);
+    
     virtual ~State() {};
-    virtual void enter(const State *lastState) = 0;
     virtual void exit() = 0;
     virtual void executeFunction() = 0;
     Transition *addEdge(const std::string &name, State* next, std::function<bool()> guard);
   
+    virtual void enterExt(const State *lastState);
     void registerSubState(State *subState);
     
     void executeSubState(state_machine::State* subState);
@@ -64,17 +67,40 @@ public:
         return subStates;
     }
     
+    /**
+     * Checks, if any of the transitions of this state triggered.
+     * Returns the first registered transition that triggered,
+     * or a nullptr.
+     * */
     Transition *checkTransitions() const;
     
+    /**
+     * Marks this state as failed and activates the failure transition
+     * */
+    void fail();
+    
+    bool failed() const;
+    
+    /**
+     * Marks this state as finished and activates the success transition
+     * */
+    void finish();
+
+    bool finished() const;
     
 protected:
-    
-    
+    virtual void enter(const State *lastState) = 0;
     const unsigned int id;
     std::vector<Transition *> transitions;
     std::vector<SubState> subStates;
     std::ostream &msg;
 
+    bool isFinished;
+    bool hasFailed;
+    
+    State *successState;
+    State *failureState;
+    
     bool destroyOnExit;
   
 private:

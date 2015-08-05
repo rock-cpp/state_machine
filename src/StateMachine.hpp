@@ -22,10 +22,15 @@ public:
         return instance;
     };
     bool execute();
-    void executeSubState(state_machine::State* subState);
     
-    void init(State* initState);
-    void start();
+    /**
+     * Executes the given state as a substate.
+     * Will return true, if the state was in
+     * finished state on exit;
+     * */
+    bool executeSubState(state_machine::State* subState);
+    
+    void start(state_machine::State* initState);
 
     /**
      * Callback, that gets called every time execute is called

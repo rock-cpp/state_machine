@@ -7,9 +7,36 @@ namespace state_machine
 
 
 
-State::State(const std::string &name_) : id(StateMachine::getInstance().getNewStateId()), msg(StateMachine::getInstance().getDebugStream()), destroyOnExit(false), name(name_)
+State::State(const std::string &name_) : State(name_, nullptr, nullptr)
+{
+}
+
+State::State(const std::string& name_, State* success) : State(name_, success, nullptr)
+{
+}
+
+State::State(const std::string& name_, State* success, State* failue) : id(StateMachine::getInstance().getNewStateId()), msg(StateMachine::getInstance().getDebugStream()), 
+                                         isFinished(false), hasFailed(false),  successState(success), failureState(failue), destroyOnExit(false), 
+                                         name(name_)
 {
     StateMachine::getInstance().registerState(this);
+    
+    if(successState)
+    {
+        addEdge("Success", successState, [&](){return finished();});
+    }
+
+    if(failureState)
+    {
+        addEdge("Failed", failureState, [&](){return failed();});
+    }
+}
+
+void State::enterExt(const State* lastState)
+{
+    hasFailed = false;
+    isFinished = false;
+    enter(lastState);
 }
 
 const std::string& State::getName() const
@@ -46,9 +73,27 @@ Transition* State::checkTransitions() const
 }
 
 void State::executeSubState(State *subState)
+void State::fail()
 {
-    StateMachine::getInstance().executeSubState(subState);
+    hasFailed = true;
 }
+
+bool State::failed() const
+{
+    return hasFailed;
+}
+
+void State::finish()
+{
+    isFinished = true;
+}
+
+bool State::finished() const
+{
+    return isFinished;
+}
+
+
 
 Transition *State::addEdge(const std::string &name, State* next, std::function<bool()> guard) 
 {
