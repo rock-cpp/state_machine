@@ -49,7 +49,7 @@ bool StateMachine::execute()
     return false;
 }
 
-void StateMachine::executeSubState(State* subState)
+bool StateMachine::executeSubState(State* subState)
 {
     State *executingState = currentState;
     
@@ -88,12 +88,14 @@ void StateMachine::executeSubState(State* subState)
             currentState->exit();
             if(transition->next == executingState)
             {
+                bool result = currentState->finished();
+                
                 if(currentState->autoDestroy())
                     delete currentState;
                 
                 currentState = transition->next;
                 
-                return;
+                return result;
             }
             
             transition->next->enterExt(currentState);
@@ -115,6 +117,7 @@ void StateMachine::executeSubState(State* subState)
             usleep((executionStep - timePassed).toMicroseconds());
         }
     }
+    return false;
 }
 
 void StateMachine::setExecuteCallback(std::function< void () > loopCallback)

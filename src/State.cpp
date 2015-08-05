@@ -72,7 +72,16 @@ Transition* State::checkTransitions() const
     return nullptr;
 }
 
-void State::executeSubState(State *subState)
+bool State::executeSubState(State *subState)
+{
+    return StateMachine::getInstance().executeSubState(subState);
+}
+
+bool State::executeSubState(State& subState)
+{
+    return StateMachine::getInstance().executeSubState(&subState);
+}
+
 void State::fail()
 {
     hasFailed = true;

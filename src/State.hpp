@@ -29,10 +29,29 @@ public:
     Transition *addEdge(const std::string &name, State* next, std::function<bool()> guard);
   
     virtual void enterExt(const State *lastState);
+    
+    /**
+     * Registeres a substate. 
+     * This function must be called prior to calling
+     * executeSubState for a given state.
+     * */
     void registerSubState(State *subState);
     
-    void executeSubState(state_machine::State* subState);
-    
+    /**
+     * Executes the given state, until an transition,
+     * to 'this' state occures. The function will
+     * block. Will return true, if state was in finished state
+     * on the transition back to 'this' state.
+     * 
+     * Note, the ExecuteCallback from the statemachine will be called
+     * */
+    bool executeSubState(state_machine::State* subState);
+
+    /**
+     * Convenienc variant of above function
+     * */
+    bool executeSubState(state_machine::State &subState);
+
     /**
      * Returns if the state should be deleted, if it is left
      * */
