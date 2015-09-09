@@ -21,6 +21,7 @@ struct State
 
 struct Transition
 {
+    Transition() : id(-1) {};
     Transition(const ::state_machine::Transition &trans);
     std::string name;
     State from;
@@ -30,6 +31,7 @@ struct Transition
 
 struct StateMachine
 {
+    StateMachine() {};
     StateMachine(const ::state_machine::StateMachine &sm);
     std::vector<State> allStates;
     std::vector<Transition> allTransitions;
