@@ -37,6 +37,7 @@ void StateMachineView::update(const state_machine::serialization::Event &event)
             if(activeState > 0)
             {
                 idToState[activeState]->setAttribute("color", "black");
+                idToState[activeState]->setAttribute("fillcolor", "white");
             }
             
             activeState = event.id;
@@ -45,6 +46,7 @@ void StateMachineView::update(const state_machine::serialization::Event &event)
             {
                 std::cout << "Found state " << std::endl;
                 idToState[activeState]->setAttribute("color", "blue");
+                idToState[activeState]->setAttribute("fillcolor", "yellow");
             }
             else
             {

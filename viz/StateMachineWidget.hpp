@@ -4,6 +4,7 @@
 #include <QGraphicsView>
 #include <qgv/QGVScene.h>
 #include <state_machine/Events.hpp>
+#include <qgv/QGVSubGraph.h>
 #include <map>
 
 class StateMachineWidget : public QGraphicsView
@@ -20,6 +21,7 @@ private:
     int activeState;
     std::map<unsigned int, QGVNode *> idToState;
     std::map<unsigned int, QGVEdge *> idToTransition;
+    std::map<unsigned int, QGVSubGraph *> idToSubGraph;
 
     QGVScene scene;
 };

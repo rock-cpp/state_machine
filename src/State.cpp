@@ -9,16 +9,19 @@ namespace state_machine
 
 State::State(const std::string &name_) : State(name_, nullptr, nullptr)
 {
+    parentState = NULL;
 }
 
 State::State(const std::string& name_, State* success) : State(name_, success, nullptr)
 {
+    parentState = NULL;
 }
 
 State::State(const std::string& name_, State* success, State* failue) : id(StateMachine::getInstance().getNewStateId()), msg(StateMachine::getInstance().getDebugStream()), 
                                          isFinished(false), hasFailed(false),  successState(success), failureState(failue), destroyOnExit(false), 
                                          name(name_)
 {
+    parentState = NULL;
     StateMachine::getInstance().registerState(this);
     
     if(successState)
@@ -56,6 +59,7 @@ void State::autoDestroy(bool deleteIt)
 
 void State::registerSubState(State* subState)
 {
+    subState->setParentState(this->getParentState());
     State::SubState sub;
     sub.state = subState;
     sub.toSubState = addEdge("To" + subState->getName(), subState, [](){return false;});
@@ -100,6 +104,21 @@ void State::finish()
 bool State::finished() const
 {
     return isFinished;
+}
+
+const State* State::getParentState() const
+{
+    if (!parentState) {
+        return this;
+    } else {
+        return parentState->getParentState();
+    } 
+    
+}
+
+void State::setParentState(const State* state)
+{
+    parentState = state;
 }
 
 

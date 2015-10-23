@@ -14,9 +14,10 @@ namespace serialization
 struct State 
 {
     State(const ::state_machine::State &state);
-    State() : id(-1) {};
+    State() : id(-1), parentId(-1) {};
     std::string name;
     int id;
+    int parentId;
 };
 
 struct Transition

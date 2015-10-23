@@ -78,7 +78,7 @@ public:
     {
     public:
         State *state;
-        Transition *toSubState;
+        Transition *toSubState; 
     };
 
     const std::vector<SubState> &getSubStates() const
@@ -107,6 +107,9 @@ public:
 
     bool finished() const;
     
+    const State* getParentState() const;
+    void setParentState(const State* state);
+    
 protected:
     virtual void enter(const State *lastState) = 0;
     const unsigned int id;
@@ -125,7 +128,7 @@ protected:
 private:
     ///Name of the state.  
     std::string name;
-
+    const State* parentState;
   
 };
 

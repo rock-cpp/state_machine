@@ -7,6 +7,13 @@ state_machine::serialization::State::State(const state_machine::State& state)
 {
     name = state.getName();
     id = state.getId();
+    if (!state.getParentState()) {
+        parentId = id;
+    } else {
+        parentId = state.getParentState()->getId();
+    }
+    
+    
 }
 
 state_machine::serialization::Transition::Transition(const state_machine::Transition& trans)

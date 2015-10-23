@@ -7,6 +7,7 @@
 #include <qgv/QGVNode.h>
 #include <QApplication>
 #include <iostream>
+#include <boost/concept_check.hpp>
 
 StateMachineWidget::StateMachineWidget(): QGraphicsView(), scene("StateMachine")
 {
@@ -37,6 +38,7 @@ void StateMachineWidget::update(const state_machine::serialization::Event &event
             if(activeState >= 0)
             {
                 idToState[activeState]->setAttribute("color", "black");
+                idToState[activeState]->setAttribute("fillcolor", "white");
             }
             
             auto s = idToState.find(event.id);
@@ -44,6 +46,7 @@ void StateMachineWidget::update(const state_machine::serialization::Event &event
             {
                 activeState = event.id;
                 idToState[activeState]->setAttribute("color", "blue");
+                idToState[activeState]->setAttribute("fillcolor", "yellow");
             }
             else
             {
@@ -75,7 +78,7 @@ void StateMachineWidget::update(const state_machine::serialization::Event &event
     scene.applyLayout();
 
     //Fit in view
-    fitInView(scene.sceneRect(), Qt::KeepAspectRatio);
+    //fitInView(scene.sceneRect(), Qt::KeepAspectRatio);
 }
 
 void StateMachineWidget::update(const state_machine::serialization::StateMachine& dump)
@@ -84,10 +87,23 @@ void StateMachineWidget::update(const state_machine::serialization::StateMachine
     scene.clear();
     idToState.clear();
     idToTransition.clear();
+    idToSubGraph.clear();
     
-    for(auto &state: dump.allStates)
+    for(const state_machine::serialization::State &state: dump.allStates)
     {
-        idToState[state.id] = scene.addNode(QString::fromStdString(state.name));
+        if (state.id != state.parentId && !idToSubGraph.count(state.parentId)) {
+            idToSubGraph[state.parentId] = scene.addSubGraph(QString::fromStdString(state.name), true);
+        }
+    }
+    
+    for(const state_machine::serialization::State &state: dump.allStates)
+    {
+        if (state.id != state.parentId) {
+            idToState[state.id] = idToSubGraph[state.parentId]->addNode(QString::fromStdString(state.name + "P:" + std::to_string(state.parentId)+ "ID:" + std::to_string(state.id)));
+        } else {
+            idToState[state.id] = scene.addNode(QString::fromStdString(state.name + "P:" + std::to_string(state.parentId)+ "ID:" + std::to_string(state.id)));
+        }
+
     }
     
     for(auto &tr: dump.allTransitions)
@@ -99,5 +115,5 @@ void StateMachineWidget::update(const state_machine::serialization::StateMachine
     scene.applyLayout();
 
     //Fit in view
-    fitInView(scene.sceneRect(), Qt::KeepAspectRatio);
+    //fitInView(scene.sceneRect(), Qt::KeepAspectRatio);
 }
