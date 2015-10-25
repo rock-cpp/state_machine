@@ -83,6 +83,8 @@ private:
     State* currentState;
     base::Time executionStep;
     
+    void checkPreemption();
+    
     std::function<void()> executeCallback;
     
     unsigned int idCounterState;

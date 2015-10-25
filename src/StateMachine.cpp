@@ -11,18 +11,12 @@ StateMachine::StateMachine() : currentState(nullptr), idCounterState(0), idCount
 {
     double frequency = boost::lexical_cast<double>(Config::getConfig().getValue("executeFrequency"));
     executionStep = base::Time::fromSeconds( 1.0 / frequency);
-    
     executeCallback = [](){};
 }
 
-/* 
- * Runs the execute from the active state with a certain frequency. Returns if the mission is finished
- */
-bool StateMachine::execute()
+void StateMachine::checkPreemption()
 {
-    lastUpdate = base::Time::now();
-    
-    if(currentState->getIsPreemptable()) 
+     if(currentState->getIsPreemptable()) 
     {
             for(auto state : getAllStates()) 
             {
@@ -46,6 +40,17 @@ bool StateMachine::execute()
                 } 
             }
     }
+}
+
+
+/* 
+ * Runs the execute from the active state with a certain frequency. Returns if the mission is finished
+ */
+bool StateMachine::execute()
+{
+    lastUpdate = base::Time::now();
+    
+    checkPreemption();
     
     Transition *transition = currentState->checkTransitions();
     
@@ -105,6 +110,8 @@ bool StateMachine::executeSubState(State* subState)
     while(true)
     {
         lastUpdate = base::Time::now();
+        
+        checkPreemption();
         
         Transition *transition = currentState->checkTransitions();
         

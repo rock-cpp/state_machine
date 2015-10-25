@@ -16,12 +16,16 @@ StateMachineView::StateMachineView(): QGraphicsView(), scene("StateMachine")
     scene.setGraphAttribute("rankdir", "LR");
     //_scene.setGraphAttribute("concentrate", "true"); //Error !
     scene.setGraphAttribute("nodesep", "0.4");
+    scene.setGraphAttribute("style", "filled");
+    scene.setGraphAttribute("fillcolor", "#a99fa5");
 
     scene.setNodeAttribute("shape", "box");
     scene.setNodeAttribute("style", "filled");
-    scene.setNodeAttribute("fillcolor", "white");
+    scene.setNodeAttribute("fillcolor", "#806969");
     scene.setNodeAttribute("height", "1.2");
+    
     scene.setEdgeAttribute("minlen", "3");
+    scene.setEdgeAttribute("pad", "0.2000");
 
     activeState = -1;
     activeTransition = -1;
@@ -37,16 +41,17 @@ void StateMachineView::update(const state_machine::serialization::Event &event)
             if(activeState > 0)
             {
                 idToState[activeState]->setAttribute("color", "black");
-                idToState[activeState]->setAttribute("fillcolor", "white");
+                idToState[activeState]->setAttribute("fillcolor", "#806969");
             }
             
             activeState = event.id;
             auto s = idToState.find(event.id);
             if(s != idToState.end())
             {
-                std::cout << "Found state " << std::endl;
-                idToState[activeState]->setAttribute("color", "blue");
+                activeState = event.id;
+                idToState[activeState]->setAttribute("color", "black");
                 idToState[activeState]->setAttribute("fillcolor", "yellow");
+                idToState[activeState]->setFocus();
             }
             else
             {
@@ -80,7 +85,7 @@ void StateMachineView::update(const state_machine::serialization::Event &event)
     scene.applyLayout();
 
     //Fit in view
-    fitInView(scene.sceneRect(), Qt::KeepAspectRatio);
+    //fitInView(scene.sceneRect(), Qt::KeepAspectRatio);
 }
 
 void StateMachineView::update(const state_machine::serialization::StateMachine& dump)
@@ -104,5 +109,5 @@ void StateMachineView::update(const state_machine::serialization::StateMachine& 
     scene.applyLayout();
 
     //Fit in view
-    fitInView(scene.sceneRect(), Qt::KeepAspectRatio);
+    //fitInView(scene.sceneRect(), Qt::KeepAspectRatio);
 }
