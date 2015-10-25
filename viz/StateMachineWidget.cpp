@@ -8,6 +8,8 @@
 #include <QApplication>
 #include <iostream>
 #include <boost/concept_check.hpp>
+#include <time.h> 
+#include <stdlib.h>
 
 StateMachineWidget::StateMachineWidget(): QGraphicsView(), scene("StateMachine")
 {
@@ -17,12 +19,16 @@ StateMachineWidget::StateMachineWidget(): QGraphicsView(), scene("StateMachine")
     scene.setGraphAttribute("rankdir", "LR");
     //_scene.setGraphAttribute("concentrate", "true"); //Error !
     scene.setGraphAttribute("nodesep", "0.4");
+    scene.setGraphAttribute("style", "filled");
+    scene.setGraphAttribute("fillcolor", "#a99fa5");
 
     scene.setNodeAttribute("shape", "box");
     scene.setNodeAttribute("style", "filled");
-    scene.setNodeAttribute("fillcolor", "white");
+    scene.setNodeAttribute("fillcolor", "#806969");
     scene.setNodeAttribute("height", "1.2");
+    
     scene.setEdgeAttribute("minlen", "3");
+    scene.setEdgeAttribute("pad", "0.2000");
 
     activeState = -1;
     activeTransition = -1;
@@ -38,15 +44,17 @@ void StateMachineWidget::update(const state_machine::serialization::Event &event
             if(activeState >= 0)
             {
                 idToState[activeState]->setAttribute("color", "black");
-                idToState[activeState]->setAttribute("fillcolor", "white");
+                idToState[activeState]->setAttribute("fillcolor", "#806969");
             }
             
             auto s = idToState.find(event.id);
             if(s != idToState.end())
             {
                 activeState = event.id;
-                idToState[activeState]->setAttribute("color", "blue");
+                idToState[activeState]->setAttribute("color", "black");
                 idToState[activeState]->setAttribute("fillcolor", "yellow");
+                idToState[activeState]->setFocus();
+                
             }
             else
             {
@@ -59,12 +67,14 @@ void StateMachineWidget::update(const state_machine::serialization::Event &event
             if(activeTransition >= 0)
             {
                 idToTransition[activeTransition]->setAttribute("color", "black");
+                idToTransition[activeTransition]->setAttribute("arrowsize", "1.2");
             }
             auto trans = idToTransition.find(event.id);
             if(trans != idToTransition.end())
             {
                 activeTransition = event.id;
                 idToTransition[activeTransition]->setAttribute("color", "red");
+                idToTransition[activeTransition]->setAttribute("arrowsize", "2.0");
             }
             else
             {
@@ -91,17 +101,19 @@ void StateMachineWidget::update(const state_machine::serialization::StateMachine
     
     for(const state_machine::serialization::State &state: dump.allStates)
     {
-        if (state.id != state.parentId && !idToSubGraph.count(state.parentId)) {
-            idToSubGraph[state.parentId] = scene.addSubGraph(QString::fromStdString(state.name), true);
+        if (!idToSubGraph.count(state.parentId)) 
+        {
+            idToSubGraph[state.parentId] = scene.addSubGraph(QString::fromStdString(state.name + std::to_string(state.id)), true);
+            idToSubGraph[state.parentId]->setAttribute(QString::fromStdString("label"), QString::fromStdString(state.name));
         }
     }
     
     for(const state_machine::serialization::State &state: dump.allStates)
     {
         if (state.id != state.parentId) {
-            idToState[state.id] = idToSubGraph[state.parentId]->addNode(QString::fromStdString(state.name + "P:" + std::to_string(state.parentId)+ "ID:" + std::to_string(state.id)));
+            idToState[state.id] = idToSubGraph[state.parentId]->addNode(QString::fromStdString(state.name));
         } else {
-            idToState[state.id] = scene.addNode(QString::fromStdString(state.name + "P:" + std::to_string(state.parentId)+ "ID:" + std::to_string(state.id)));
+            idToState[state.id] = scene.addNode(QString::fromStdString(state.name));
         }
 
     }

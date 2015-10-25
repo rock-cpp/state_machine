@@ -9,19 +9,19 @@ namespace state_machine
 
 State::State(const std::string &name_) : State(name_, nullptr, nullptr)
 {
-    parentState = NULL;
+    parentState = this;
 }
 
 State::State(const std::string& name_, State* success) : State(name_, success, nullptr)
 {
-    parentState = NULL;
+    parentState = this;
 }
 
 State::State(const std::string& name_, State* success, State* failue) : id(StateMachine::getInstance().getNewStateId()), msg(StateMachine::getInstance().getDebugStream()), 
                                          isFinished(false), hasFailed(false),  successState(success), failureState(failue), destroyOnExit(false), 
                                          name(name_)
 {
-    parentState = NULL;
+    parentState = this;
     StateMachine::getInstance().registerState(this);
     
     if(successState)
@@ -108,11 +108,14 @@ bool State::finished() const
 
 const State* State::getParentState() const
 {
-    if (!parentState) {
+    if(!parentState) 
+    {
         return this;
-    } else {
-        return parentState->getParentState();
     } 
+    else
+    {
+        return parentState;
+    }
     
 }
 

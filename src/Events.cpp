@@ -5,7 +5,7 @@
 
 state_machine::serialization::State::State(const state_machine::State& state)
 {
-    name = state.getName();
+    name = "    " + state.getName() + "    ";
     id = state.getId();
     if (!state.getParentState()) {
         parentId = id;
@@ -28,7 +28,7 @@ state_machine::serialization::Transition::Transition(const state_machine::Transi
         from = State(*(trans.prev));
     }
     
-    name = trans.getName();
+    name = "    " + trans.getName() + "    ";
     
     id = trans.getId();
 }
