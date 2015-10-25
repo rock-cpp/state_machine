@@ -10,11 +10,13 @@ namespace state_machine
 State::State(const std::string &name_) : State(name_, nullptr, nullptr)
 {
     parentState = this;
+    isPreemptable = false;
 }
 
 State::State(const std::string& name_, State* success) : State(name_, success, nullptr)
 {
     parentState = this;
+    isPreemptable = false;
 }
 
 State::State(const std::string& name_, State* success, State* failue) : id(StateMachine::getInstance().getNewStateId()), msg(StateMachine::getInstance().getDebugStream()), 
@@ -22,6 +24,7 @@ State::State(const std::string& name_, State* success, State* failue) : id(State
                                          name(name_)
 {
     parentState = this;
+    isPreemptable = false;
     StateMachine::getInstance().registerState(this);
     
     if(successState)
@@ -132,5 +135,52 @@ Transition *State::addEdge(const std::string &name, State* next, std::function<b
     this->transitions.push_back(tr);
     return tr;
 }
+
+Transition* State::deleteEdge(const std::string& name)
+{
+    for (unsigned i = 0; i < transitions.size(); i++) {
+        if (transitions[i]->getName().compare(name) == 0) {
+            Transition* oldTr = transitions[i];
+            transitions.erase(transitions.begin() + i);
+            return oldTr;
+        }
+    }
+    return nullptr;
+}
+
+void State::deRegisterSubState(State *subState)
+{
+    for (unsigned i = 0; i < subStates.size(); i++) {
+        if (subStates[i].state->getId() == subState->getId()) {
+            subStates.erase(subStates.begin() + i);
+            return;
+        }
+    }
+    return;
+}
+
+
+
+bool State::getIsPreemptable()
+{
+    return isPreemptable;
+}
+
+bool State::preemptionHook()
+{
+    return false;
+}
+
+State* State::getFailureState()
+{
+    return failureState;
+}
+
+State* State::getSuccessState()
+{
+    return successState;
+}
+
+
 
 }

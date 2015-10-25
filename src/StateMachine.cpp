@@ -22,6 +22,31 @@ bool StateMachine::execute()
 {
     lastUpdate = base::Time::now();
     
+    if(currentState->getIsPreemptable()) 
+    {
+            for(auto state : getAllStates()) 
+            {
+                if(currentState != state.first && state.first->preemptionHook()) 
+                {
+                    state.first->addEdge("Preemption success", currentState, [&](){return state.first->finished();});
+                    state.first->addEdge("Preemption failure", currentState, [&](){return state.first->failed();});
+                    Transition* oldSuccessTr = state.first->deleteEdge("Success");
+                    Transition* oldFailureTr = state.first->deleteEdge("Failed");
+                    currentState->registerSubState(state.first);
+                    
+                    currentState->executeSubState(state.first);
+                    
+                    currentState->deRegisterSubState(state.first);
+                    state.first->addEdge(oldSuccessTr->getName(), oldSuccessTr->next, oldSuccessTr->guard);
+                    state.first->addEdge(oldFailureTr->getName(), oldFailureTr->next, oldFailureTr->guard);
+                    state.first->deleteEdge("Preemption success");
+                    state.first->deleteEdge("Preemption failure");
+                    
+                    break;
+                } 
+            }
+    }
+    
     Transition *transition = currentState->checkTransitions();
     
     if(transition)
@@ -35,6 +60,8 @@ bool StateMachine::execute()
         
         currentState = transition->next;
     }
+    
+
     
     currentState->executeFunction();
 

@@ -26,7 +26,12 @@ public:
     virtual ~State() {};
     virtual void exit() = 0;
     virtual void executeFunction() = 0;
+    /**
+     * Return true if interruption by this state is wanted, default returns false
+     */
+    virtual bool preemptionHook();
     Transition *addEdge(const std::string &name, State* next, std::function<bool()> guard);
+    Transition *deleteEdge(const std::string &name);
   
     virtual void enterExt(const State *lastState);
     
@@ -36,6 +41,11 @@ public:
      * executeSubState for a given state.
      * */
     void registerSubState(State *subState);
+    
+    /**
+     * Removes a registered substate.
+     */
+    void deRegisterSubState(State *subState);
     
     /**
      * Executes the given state, until an transition,
@@ -107,8 +117,23 @@ public:
 
     bool finished() const;
     
+    /**
+     * Returns a State* to the parentState, if state is no substate it returns itself.
+     */
     const State* getParentState() const;
+    
+    /**
+     * Sets pointer to parent state
+     */
     void setParentState(const State* state);
+   
+    /**
+     * Returns if state can interrupted
+     */
+    bool getIsPreemptable();
+
+    State* getSuccessState();
+    State* getFailureState();
     
 protected:
     virtual void enter(const State *lastState) = 0;
@@ -123,16 +148,15 @@ protected:
     State *successState;
     State *failureState;
     
+    
     bool destroyOnExit;
   
 private:
     ///Name of the state.  
     std::string name;
     const State* parentState;
-  
+    bool isPreemptable;
 };
-
-
 
 }
 #endif // STATE_H
