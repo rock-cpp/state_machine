@@ -1,3 +1,4 @@
+find_package( Boost COMPONENTS system filesystem)
 rock_library(state_machine
     SOURCES 
         Config.cpp
@@ -13,6 +14,10 @@ rock_library(state_machine
         Events.hpp
     DEPS_PKGCONFIG 
         base-types
+        yaml-cpp
+    DEPS_PLAIN 
+        Boost_SYSTEM Boost_FILESYSTEM 
+
 )
 
 rock_executable(state_machine_bin Main.cpp
