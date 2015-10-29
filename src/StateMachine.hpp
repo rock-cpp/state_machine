@@ -73,17 +73,20 @@ public:
     
     void transitionTriggered(Transition *tr);
     
+    void registerPreemtptionState(State* state);
+    
+    bool checkPreemption();
+    
 private:
     std::map<State *, std::string> states;
     std::map<Transition *, std::string> transistions;
     std::vector<serialization::Event> events;
+    std::vector<State*> preemptionStates;
     
     std::stringstream debugStream;
     
     State* currentState;
     base::Time executionStep;
-    
-    void checkPreemption();
     
     std::function<void()> executeCallback;
     

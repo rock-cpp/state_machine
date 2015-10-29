@@ -10,36 +10,61 @@ namespace state_machine
 StateMachine::StateMachine() : currentState(nullptr), idCounterState(0), idCounterTransition(0)
 {
     double frequency = boost::lexical_cast<double>(Config::getConfig().getValue("executeFrequency"));
-    executionStep = base::Time::fromSeconds( 1.0 / frequency);
+    executionStep = base::Time::fromSeconds( 1.0 / frequency); 
     executeCallback = [](){};
 }
 
-void StateMachine::checkPreemption()
+void StateMachine::registerPreemtptionState(State* state)
 {
-     if(currentState->getIsPreemptable()) 
-    {
-            for(auto state : getAllStates()) 
+    //If state is already registered just return
+    for (State* st : preemptionStates) {
+        if (st->getId() == state->getId()) {
+            return;
+        }
+    }
+    preemptionStates.push_back(state);
+    return;
+}
+
+/**
+ * If this is called the state machine checks for interruptions by registered states and returns if premption happend
+ */
+bool StateMachine::checkPreemption()
+{
+    bool preemted = false;
+    for(State* state : preemptionStates) 
             {
-                if(currentState != state.first && state.first->preemptionHook()) 
+                if(currentState->getId() != state->getId() && state->preemptionHook()) 
                 {
-                    state.first->addEdge("Preemption success", currentState, [&](){return state.first->finished();});
-                    state.first->addEdge("Preemption failure", currentState, [&](){return state.first->failed();});
-                    Transition* oldSuccessTr = state.first->deleteEdge("Success");
-                    Transition* oldFailureTr = state.first->deleteEdge("Failed");
-                    currentState->registerSubState(state.first);
+                    //Add Edge to have transition from preemtionState to currentState, so executeSubState can finish
+                    Transition* premptionSuccess = state->addEdge("Preemption done", currentState, [&](){return state->finished();});
                     
-                    currentState->executeSubState(state.first);
+                    //Delete old success and failure transitions so executeSubState finishes and save them
+                    Transition* oldSuccessTr = state->getSuccessTransition();
+                    Transition* oldFailureTr = state->getFailureTransition();
+                    state->deleteEdge(state->getSuccessTransition());
+                    state->deleteEdge(state->getFailureTransition());
                     
-                    currentState->deRegisterSubState(state.first);
-                    state.first->addEdge(oldSuccessTr->getName(), oldSuccessTr->next, oldSuccessTr->guard);
-                    state.first->addEdge(oldFailureTr->getName(), oldFailureTr->next, oldFailureTr->guard);
-                    state.first->deleteEdge("Preemption success");
-                    state.first->deleteEdge("Preemption failure");
+                    //Register subState and save transition to delete it after execution
+                    Transition* toSubState = currentState->registerSubState(state);
                     
+                    currentState->executeSubState(state);
+                    
+                    currentState->deRegisterSubState(state);
+                    
+                    if(oldFailureTr) {
+                        state->addEdge(oldFailureTr->getName(), oldFailureTr->next, oldFailureTr->guard);
+                    }
+                    if(oldSuccessTr) {
+                        state->addEdge(oldSuccessTr->getName(), oldSuccessTr->next, oldSuccessTr->guard);
+                    }
+                    state->deleteEdge(premptionSuccess);
+                    state->deleteEdge(toSubState);
+                    preemted = true;
                     break;
                 } 
             }
-    }
+            return preemted;
 }
 
 
@@ -49,8 +74,6 @@ void StateMachine::checkPreemption()
 bool StateMachine::execute()
 {
     lastUpdate = base::Time::now();
-    
-    checkPreemption();
     
     Transition *transition = currentState->checkTransitions();
     
@@ -111,8 +134,6 @@ bool StateMachine::executeSubState(State* subState)
     {
         lastUpdate = base::Time::now();
         
-        checkPreemption();
-        
         Transition *transition = currentState->checkTransitions();
         
         if(transition)
@@ -142,7 +163,7 @@ bool StateMachine::executeSubState(State* subState)
         
         
         currentState->executeFunction();
-
+        
         executeCallback();
         
         timePassed = base::Time::now() - lastUpdate;

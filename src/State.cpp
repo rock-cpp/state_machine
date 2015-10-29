@@ -2,6 +2,7 @@
 #include "StateMachine.hpp"
 #include "Transition.hpp"
 
+
 namespace state_machine
 {
 
@@ -60,13 +61,14 @@ void State::autoDestroy(bool deleteIt)
     destroyOnExit = deleteIt;
 }
 
-void State::registerSubState(State* subState)
+Transition* State::registerSubState(State* subState)
 {
     subState->setParentState(this->getParentState());
     State::SubState sub;
     sub.state = subState;
     sub.toSubState = addEdge("To" + subState->getName(), subState, [](){return false;});
     subStates.push_back(sub);
+    return sub.toSubState;
 }
 
 Transition* State::checkTransitions() const
@@ -78,6 +80,27 @@ Transition* State::checkTransitions() const
     }
     return nullptr;
 }
+
+Transition* State::getSuccessTransition()
+{
+    for (Transition* tr : transitions) {
+        if(tr->next == getSuccessState()) {
+            return tr;
+        }
+    }
+    return nullptr;
+}
+
+Transition* State::getFailureTransition()
+{
+    for (Transition* tr : transitions) {
+        if(tr->next == getFailureState()) {
+            return tr;
+        }
+    }
+    return nullptr;
+}
+
 
 bool State::executeSubState(State *subState)
 {
@@ -136,34 +159,36 @@ Transition *State::addEdge(const std::string &name, State* next, std::function<b
     return tr;
 }
 
-Transition* State::deleteEdge(const std::string& name)
+void State::deleteEdge(Transition* tr)
 {
     for (unsigned i = 0; i < transitions.size(); i++) {
-        if (transitions[i]->getName().compare(name) == 0) {
-            Transition* oldTr = transitions[i];
+        if (transitions[i]->getId() == tr->getId()) {
             transitions.erase(transitions.begin() + i);
-            return oldTr;
-        }
-    }
-    return nullptr;
-}
-
-void State::deRegisterSubState(State *subState)
-{
-    for (unsigned i = 0; i < subStates.size(); i++) {
-        if (subStates[i].state->getId() == subState->getId()) {
-            subStates.erase(subStates.begin() + i);
             return;
         }
     }
     return;
 }
 
-
-
-bool State::getIsPreemptable()
+const std::vector< State::SubState > &State::getSubStates() const
 {
-    return isPreemptable;
+    return subStates;
+}
+
+/**
+ * Deletes all Transitions from this to substate
+ */
+void State::deRegisterSubState(State *subState)
+{
+    std::vector<SubState>::iterator it;
+    while(it != subStates.end()) {
+        if(it->state->getId() == subState->getId()) {
+            it = subStates.erase(it);
+        } else {
+            it++;
+        }
+    }
+    return;
 }
 
 bool State::preemptionHook()

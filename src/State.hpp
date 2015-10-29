@@ -31,7 +31,7 @@ public:
      */
     virtual bool preemptionHook();
     Transition *addEdge(const std::string &name, State* next, std::function<bool()> guard);
-    Transition *deleteEdge(const std::string &name);
+    void deleteEdge(Transition*);
   
     virtual void enterExt(const State *lastState);
     
@@ -39,8 +39,10 @@ public:
      * Registeres a substate. 
      * This function must be called prior to calling
      * executeSubState for a given state.
+     * 
+     * Returns the transition from the current state to the substate
      * */
-    void registerSubState(State *subState);
+    Transition* registerSubState(State *subState);
     
     /**
      * Removes a registered substate.
@@ -91,10 +93,7 @@ public:
         Transition *toSubState; 
     };
 
-    const std::vector<SubState> &getSubStates() const
-    {
-        return subStates;
-    }
+    const std::vector<SubState> &getSubStates() const;
     
     /**
      * Checks, if any of the transitions of this state triggered.
@@ -126,14 +125,13 @@ public:
      * Sets pointer to parent state
      */
     void setParentState(const State* state);
-   
-    /**
-     * Returns if state can interrupted
-     */
-    bool getIsPreemptable();
-
+  
     State* getSuccessState();
     State* getFailureState();
+    
+    Transition* getSuccessTransition();
+    Transition* getFailureTransition();
+    
     
 protected:
     virtual void enter(const State *lastState) = 0;
