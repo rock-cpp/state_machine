@@ -175,6 +175,17 @@ bool StateMachine::executeSubState(State* subState)
     return false;
 }
 
+State* StateMachine::getStateByName(std::string name)
+{
+    for (auto entry : states) {
+        if(entry.second.compare(name) == 0) {
+            return entry.first;
+        }
+    }
+    return nullptr;
+}
+
+
 void StateMachine::setExecuteCallback(std::function< void () > loopCallback)
 {
     executeCallback = loopCallback;

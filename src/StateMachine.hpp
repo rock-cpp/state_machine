@@ -77,6 +77,8 @@ public:
     
     bool checkPreemption();
     
+    State* getStateByName(std::string name);
+    
 private:
     std::map<State *, std::string> states;
     std::map<Transition *, std::string> transistions;
