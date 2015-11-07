@@ -75,11 +75,14 @@ public:
     
     void registerPreemtptionState(State* state);
     
-    bool checkPreemption();
+    bool checkPreemption(bool);
+    bool executePreemption();
     
     State* getStateByName(std::string name);
     
 private:
+    State* preemptingState;
+  
     std::map<State *, std::string> states;
     std::map<Transition *, std::string> transistions;
     std::vector<serialization::Event> events;

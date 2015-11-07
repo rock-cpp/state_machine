@@ -12,6 +12,7 @@ StateMachine::StateMachine() : currentState(nullptr), idCounterState(0), idCount
     double frequency = boost::lexical_cast<double>(Config::getConfig().getValue("executeFrequency"));
     executionStep = base::Time::fromSeconds( 1.0 / frequency); 
     executeCallback = [](){};
+    preemptingState = nullptr;
 }
 
 void StateMachine::registerPreemtptionState(State* state)
@@ -26,45 +27,63 @@ void StateMachine::registerPreemtptionState(State* state)
     return;
 }
 
+
+/**
+ * Executes preemtion, checkPreemption has to be run first
+ */
+bool StateMachine::executePreemption()
+{
+    if(preemptingState && currentState->getId() != preemptingState->getId()) {
+	  //Add Edge to have transition from preemtionState to currentState, so executeSubState can finish
+	  Transition* premptionSuccess = preemptingState->addEdge("Preemption done", currentState, [&](){return preemptingState->finished();});
+	  
+	  //Delete old success and failure transitions so executeSubState finishes and save them
+	  Transition* oldSuccessTr = preemptingState->getSuccessTransition();
+	  Transition* oldFailureTr = preemptingState->getFailureTransition();
+	  preemptingState->deleteEdge(preemptingState->getSuccessTransition());
+	  preemptingState->deleteEdge(preemptingState->getFailureTransition());
+	  
+	  //Register subState and save transition to delete it after execution
+	  Transition* toSubState = currentState->registerSubState(preemptingState);
+	  
+	  currentState->executeSubState(preemptingState);
+	  
+	  currentState->deRegisterSubState(preemptingState);
+	  
+	  if(oldFailureTr) {
+	      preemptingState->addEdge(oldFailureTr->getName(), oldFailureTr->next, oldFailureTr->guard);
+	  }
+	  if(oldSuccessTr) {
+	      preemptingState->addEdge(oldSuccessTr->getName(), oldSuccessTr->next, oldSuccessTr->guard);
+	  }
+	  preemptingState->deleteEdge(premptionSuccess);
+	  preemptingState->deleteEdge(toSubState);
+	  
+	  preemptingState = nullptr;
+	  return true;
+    }
+    return false;
+}
+
+
 /**
  * If this is called the state machine checks for interruptions by registered states and returns if premption happend
+ * 
+ * bool: if execute preemption should be called here
  */
-bool StateMachine::checkPreemption()
+bool StateMachine::checkPreemption(bool callExecute)
 {
-    bool preemted = false;
     for(State* state : preemptionStates) 
-            {
-                if(currentState->getId() != state->getId() && state->preemptionHook()) 
-                {
-                    //Add Edge to have transition from preemtionState to currentState, so executeSubState can finish
-                    Transition* premptionSuccess = state->addEdge("Preemption done", currentState, [&](){return state->finished();});
-                    
-                    //Delete old success and failure transitions so executeSubState finishes and save them
-                    Transition* oldSuccessTr = state->getSuccessTransition();
-                    Transition* oldFailureTr = state->getFailureTransition();
-                    state->deleteEdge(state->getSuccessTransition());
-                    state->deleteEdge(state->getFailureTransition());
-                    
-                    //Register subState and save transition to delete it after execution
-                    Transition* toSubState = currentState->registerSubState(state);
-                    
-                    currentState->executeSubState(state);
-                    
-                    currentState->deRegisterSubState(state);
-                    
-                    if(oldFailureTr) {
-                        state->addEdge(oldFailureTr->getName(), oldFailureTr->next, oldFailureTr->guard);
-                    }
-                    if(oldSuccessTr) {
-                        state->addEdge(oldSuccessTr->getName(), oldSuccessTr->next, oldSuccessTr->guard);
-                    }
-                    state->deleteEdge(premptionSuccess);
-                    state->deleteEdge(toSubState);
-                    preemted = true;
-                    break;
-                } 
-            }
-            return preemted;
+    {
+	if(currentState->getId() != state->getId() && state->preemptionHook()) 
+	{
+	    preemptingState = state;
+	    if(callExecute) {
+	      executePreemption();
+	    }
+	    return true;
+	} 
+    }
 }
 
 
