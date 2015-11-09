@@ -161,6 +161,9 @@ Transition *State::addEdge(const std::string &name, State* next, std::function<b
 
 void State::deleteEdge(Transition* tr)
 {
+    if(!tr) {
+	return;
+    }
     for (unsigned i = 0; i < transitions.size(); i++) {
         if (transitions[i]->getId() == tr->getId()) {
             transitions.erase(transitions.begin() + i);
@@ -180,7 +183,11 @@ const std::vector< State::SubState > &State::getSubStates() const
  */
 void State::deRegisterSubState(State *subState)
 {
+    if(!subState) {
+    	return;
+    }
     std::vector<SubState>::iterator it;
+    it = subStates.begin();
     while(it != subStates.end()) {
         if(it->state->getId() == subState->getId()) {
             it = subStates.erase(it);
