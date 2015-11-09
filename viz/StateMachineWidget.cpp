@@ -8,13 +8,13 @@
 #include <QApplication>
 #include <iostream>
 #include <boost/concept_check.hpp>
-#include <time.h> 
+#include <time.h>
 #include <stdlib.h>
 
 StateMachineWidget::StateMachineWidget(): QGraphicsView(), scene("StateMachine")
 {
     setScene(&scene);
-    
+
     scene.setGraphAttribute("splines", "ortho");
     scene.setGraphAttribute("rankdir", "LR");
     //_scene.setGraphAttribute("concentrate", "true"); //Error !
@@ -26,7 +26,7 @@ StateMachineWidget::StateMachineWidget(): QGraphicsView(), scene("StateMachine")
     scene.setNodeAttribute("style", "filled");
     scene.setNodeAttribute("fillcolor", "#806969");
     scene.setNodeAttribute("height", "1.2");
-    
+
     scene.setEdgeAttribute("minlen", "3");
     scene.setEdgeAttribute("pad", "0.2000");
 
@@ -39,56 +39,53 @@ void StateMachineWidget::update(const state_machine::serialization::Event &event
 {
     switch(event.type)
     {
-        case state_machine::serialization::StateChanged:
+    case state_machine::serialization::StateChanged:
+    {
+        if(activeState >= 0)
         {
-            if(activeState >= 0)
-            {
-                idToState[activeState]->setAttribute("color", "black");
-                idToState[activeState]->setAttribute("fillcolor", "#806969");
-            }
-            
-            auto s = idToState.find(event.id);
-            if(s != idToState.end())
-            {
-                activeState = event.id;
-                idToState[activeState]->setAttribute("color", "black");
-                idToState[activeState]->setAttribute("fillcolor", "yellow");
-                idToState[activeState]->setFocus();
-                
-            }
-            else
-            {
-                std::cout << "Error state " << event.id << " not found" << std::endl;
-            }
+            idToState[activeState]->setAttribute("color", "black");
+            idToState[activeState]->setAttribute("fillcolor", "#806969");
         }
-            break;
-        case state_machine::serialization::TransitionTriggered:
+
+        auto s = idToState.find(event.id);
+        if(s != idToState.end())
         {
-            if(activeTransition >= 0)
-            {
-                idToTransition[activeTransition]->setAttribute("color", "black");
-                idToTransition[activeTransition]->setAttribute("arrowsize", "1.2");
-            }
-            auto trans = idToTransition.find(event.id);
-            if(trans != idToTransition.end())
-            {
-                activeTransition = event.id;
-                idToTransition[activeTransition]->setAttribute("color", "red");
-                idToTransition[activeTransition]->setAttribute("arrowsize", "2.0");
-            }
-            else
-            {
-                std::cout << "Error unknown transition " << event.id << std::endl;
-            }
+            activeState = event.id;
+            idToState[activeState]->setAttribute("color", "black");
+            idToState[activeState]->setAttribute("fillcolor", "yellow");
+            idToState[activeState]->setFocus();
+
         }
-            break;
+        else
+        {
+            std::cout << "Error state " << event.id << " not found" << std::endl;
+        }
+    }
+    break;
+    case state_machine::serialization::TransitionTriggered:
+    {
+        if(activeTransition >= 0)
+        {
+            idToTransition[activeTransition]->setAttribute("color", "black");
+            idToTransition[activeTransition]->setAttribute("arrowsize", "1.2");
+        }
+        auto trans = idToTransition.find(event.id);
+        if(trans != idToTransition.end())
+        {
+            activeTransition = event.id;
+            idToTransition[activeTransition]->setAttribute("color", "red");
+            idToTransition[activeTransition]->setAttribute("arrowsize", "2.0");
+        }
+        else
+        {
+            std::cout << "Error unknown transition " << event.id << std::endl;
+        }
+    }
+    break;
     }
 
     //Layout scene
     scene.applyLayout();
-
-    //Fit in view
-    //fitInView(scene.sceneRect(), Qt::KeepAspectRatio);
 }
 
 void StateMachineWidget::update(const state_machine::serialization::StateMachine& dump)
@@ -98,16 +95,16 @@ void StateMachineWidget::update(const state_machine::serialization::StateMachine
     idToState.clear();
     idToTransition.clear();
     idToSubGraph.clear();
-    
+
     for(const state_machine::serialization::State &state: dump.allStates)
     {
-        if (!idToSubGraph.count(state.parentId)) 
+        if (!idToSubGraph.count(state.parentId))
         {
             idToSubGraph[state.parentId] = scene.addSubGraph(QString::fromStdString(state.name + std::to_string(state.id)), true);
             idToSubGraph[state.parentId]->setAttribute(QString::fromStdString("label"), QString::fromStdString(state.name));
         }
     }
-    
+
     for(const state_machine::serialization::State &state: dump.allStates)
     {
         if (state.id != state.parentId) {
@@ -117,15 +114,17 @@ void StateMachineWidget::update(const state_machine::serialization::StateMachine
         }
 
     }
-    
+
     for(auto &tr: dump.allTransitions)
     {
         idToTransition[tr.id] = scene.addEdge(idToState[tr.from.id], idToState[tr.to.id], QString::fromStdString(tr.name));
     }
-    
+
     //Layout scene
     scene.applyLayout();
+}
 
-    //Fit in view
-    //fitInView(scene.sceneRect(), Qt::KeepAspectRatio);
+void StateMachineWidget::wheelEvent(QWheelEvent* e) {
+    double z = (e->delta()/120) * 0.1;
+    scale(1+z, 1+z);
 }
