@@ -84,6 +84,7 @@ bool StateMachine::checkPreemption(bool callExecute)
 	    return true;
 	} 
     }
+    return false;
 }
 
 
