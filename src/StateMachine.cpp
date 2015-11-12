@@ -12,12 +12,10 @@ StateMachine::StateMachine() : currentState(nullptr), idCounterState(0), idCount
     double frequency = boost::lexical_cast<double>(Config::getConfig().getValue("executeFrequency"));
     executionStep = base::Time::fromSeconds( 1.0 / frequency); 
     executeCallback = [](){};
-    preemptingState = nullptr;
 }
 
 void StateMachine::registerPreemtptionState(State* state)
 {
-    //If state is already registered just return
     for (State* st : preemptionStates) {
         if (st->getId() == state->getId()) {
             return;
@@ -29,11 +27,13 @@ void StateMachine::registerPreemtptionState(State* state)
 
 
 /**
- * Executes preemtion, checkPreemption has to be run first
+ * Executes preemtion, checkPreemption has to be run first, returns value of executeSubState for every preemptingState as a map State*,bool
  */
-bool StateMachine::executePreemption()
+void StateMachine::executePreemption()
 {
-    if(preemptingState && currentState->getId() != preemptingState->getId()) {
+    while(!preemptingStates.empty()) {
+      State* preemptingState = preemptingStates.front();
+      if(preemptingState && currentState->getId() != preemptingState->getId()) {
 	  //Add Edge to have transition from preemtionState to currentState, so executeSubState can finish
 	  Transition* premptionSuccess = preemptingState->addEdge("Preemption done", currentState, [&](){return preemptingState->finished();});
 	  
@@ -59,32 +59,28 @@ bool StateMachine::executePreemption()
 	  preemptingState->deleteEdge(premptionSuccess);
 	  preemptingState->deleteEdge(toSubState);
 	  
-	  preemptingState = nullptr;
-	  return true;
+      }
+      preemptingStates.pop();
     }
-    return false;
+    return;
 }
 
 
 /**
- * If this is called the state machine checks for interruptions by registered states and returns if premption happend
- * 
- * bool: if execute preemption should be called here
+ * If this is called the state machine checks for interruptions by registered states and returns if premption is wanted and execute should be called
  */
-bool StateMachine::checkPreemption(bool callExecute)
+bool StateMachine::checkPreemption(State* preemptedState)
 {
+    bool preempted = false;
     for(State* state : preemptionStates) 
     {
-	if(currentState->getId() != state->getId() && state->preemptionHook()) 
+	if(currentState->getId() != state->getId() && state->preemptionHook(preemptedState)) 
 	{
-	    preemptingState = state;
-	    if(callExecute) {
-	      executePreemption();
-	    }
-	    return true;
+	    preemptingStates.push(state);
+	    preempted = true;
 	} 
     }
-    return false;
+    return preempted;
 }
 
 
@@ -96,7 +92,7 @@ bool StateMachine::execute()
     lastUpdate = base::Time::now();
     
     Transition *transition = currentState->checkTransitions();
-    
+
     if(transition)
     {
         transitionTriggered(transition);

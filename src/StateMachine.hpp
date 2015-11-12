@@ -4,6 +4,7 @@
 #include <sstream>
 #include <map>
 #include <vector>
+#include <queue>
 #include "Events.hpp"
 
 namespace state_machine
@@ -75,13 +76,13 @@ public:
     
     void registerPreemtptionState(State* state);
     
-    bool checkPreemption(bool);
-    bool executePreemption();
+    bool checkPreemption(State* preemptedState);
+    void executePreemption();
     
     State* getStateByName(std::string name);
     
 private:
-    State* preemptingState;
+    std::queue<State*> preemptingStates;
   
     std::map<State *, std::string> states;
     std::map<Transition *, std::string> transistions;
