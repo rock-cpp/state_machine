@@ -29,7 +29,7 @@ public:
     /**
      * Return true if interruption by this state is wanted, default returns false
      */
-    virtual bool preemptionHook();
+    virtual bool preemptionHook(State* preemptedState);
     Transition *addEdge(const std::string &name, State* next, std::function<bool()> guard);
     void deleteEdge(Transition*);
   

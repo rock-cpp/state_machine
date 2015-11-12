@@ -198,7 +198,7 @@ void State::deRegisterSubState(State *subState)
     return;
 }
 
-bool State::preemptionHook()
+bool State::preemptionHook(State* preemptedState)
 {
     return false;
 }
