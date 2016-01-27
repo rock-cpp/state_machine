@@ -63,7 +63,7 @@ void State::autoDestroy(bool deleteIt)
 
 Transition* State::registerSubState(State* subState)
 {
-    subState->setParentState(this->getParentState());
+    subState->setParentState(this);
     State::SubState sub;
     sub.state = subState;
     sub.toSubState = addEdge("To" + subState->getName(), subState, [](){return false;});
