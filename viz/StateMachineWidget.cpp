@@ -95,13 +95,14 @@ void StateMachineWidget::update(const state_machine::serialization::StateMachine
     idToState.clear();
     idToTransition.clear();
     idToSubGraph.clear();
-
+    std::map<unsigned int, const state_machine::serialization::State*>  idToSerState;
+    
     for(const state_machine::serialization::State &state: dump.allStates)
     {
+        idToSerState[state.id] = &state;
         if (!idToSubGraph.count(state.parentId))
         {
             idToSubGraph[state.parentId] = scene.addSubGraph(QString::fromStdString(state.name + std::to_string(state.id)), true);
-            idToSubGraph[state.parentId]->setAttribute(QString::fromStdString("label"), QString::fromStdString(state.name));
         }
     }
 
@@ -112,9 +113,13 @@ void StateMachineWidget::update(const state_machine::serialization::StateMachine
         } else {
             idToState[state.id] = scene.addNode(QString::fromStdString(state.name));
         }
-
     }
 
+    for(auto &it : idToSubGraph)
+    {
+        it.second->setAttribute(QString::fromStdString("label"), QString::fromStdString(idToSerState[it.first]->name));
+    }
+    
     for(auto &tr: dump.allTransitions)
     {
         idToTransition[tr.id] = scene.addEdge(idToState[tr.from.id], idToState[tr.to.id], QString::fromStdString(tr.name));
