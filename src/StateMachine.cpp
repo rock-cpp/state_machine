@@ -3,6 +3,7 @@
 #include <boost/lexical_cast.hpp>
 #include "State.hpp"
 #include "Transition.hpp"
+#include "RPCCall.hpp"
 
 namespace state_machine
 {
@@ -105,7 +106,7 @@ bool StateMachine::execute()
         currentState = transition->next;
     }
     
-
+    
     
     currentState->executeFunction();
 
