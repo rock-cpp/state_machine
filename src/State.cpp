@@ -8,9 +8,15 @@ namespace state_machine
     
 bool InitState::configure()
 {
+    bool success = true;
+    
     for(TaskWithConfig &t: allTasks)
     {
-        confHelper.applyConfig(t.task, t.config);
+        
+        if(!confHelper.applyConfig(t.task, t.config))
+        {
+            success = false;
+        }
         
         if(!trHelper->configureTransformer(t.task))
         {
@@ -32,10 +38,10 @@ bool InitState::configure()
         std::cout << "Init::Configured " << t.task->getName() << std::endl;
         
     }
-    return true;
+    return success;
 }
     
-bool InitState::start()
+void InitState::start()
 {
     for(TaskWithConfig &t: allTasks)
     {
@@ -46,7 +52,6 @@ bool InitState::start()
         std::cout << "Init::Started " << t.task->getName() << std::endl;
 
     }
-    return true;
 }
     
 void InitState::executeFunction()

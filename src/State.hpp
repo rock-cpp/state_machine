@@ -191,10 +191,10 @@ private:
     void registerWithConfig(RTT::TaskContext *task, const std::string &config = "default");
     void registerWithConfig(RTT::TaskContext *task, const std::string &config, const std::string &config2);
     void registerWithConfig(RTT::TaskContext *task, const std::string &config, const std::string &config2, const std::string &config3);
-    virtual bool setup();
-    virtual bool connect();
+    virtual void setup();
+    virtual void connect();
     bool configure();
-    bool start();
+    void start();
 
     
 public:
