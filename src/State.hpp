@@ -176,6 +176,7 @@ class InitState : public State
 {
 private:
     std::vector<TaskWithConfig> allTasks;
+    std::vector<std::string> excludePorts;
     bool initialized;
     orocos_cpp::ConfigurationHelper confHelper;
     ArtemisRobot robot;
@@ -195,7 +196,8 @@ private:
     
 public:
     InitState(const std::string& name, State* success, State* failure, bool doLog) : State(name, success, failure), doLog(doLog) {};
-    std::vector<TaskWithConfig> getAllTasks() { return allTasks; }
+    std::vector<TaskWithConfig> getAllTasks() { return allTasks; };
+    std::vector<std::string> getExcludePortNames() { return excludePorts; };
 };
 
 
