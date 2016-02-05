@@ -12,11 +12,13 @@ static Config *instance = nullptr;
 Config& Config::getConfig(const std::string& configFile)
 {
     if(instance)
+    {
         throw std::runtime_error("Config: Error, allready initialized");
-    
+    }
     if(!boost::filesystem::exists(configFile))
+    {
         throw std::runtime_error("Config: Error, config file " + configFile + " does not exist");
-    
+    }
     instance = new Config();
     
     try
@@ -54,8 +56,9 @@ Config& Config::getConfig(const std::string& configFile)
 Config& Config::getConfig()
 {
     if(!instance)
+    {
         throw std::runtime_error("Config: Error, not initialized");
-
+    }
     return *instance;
 }
 
@@ -68,8 +71,9 @@ const std::string& Config::getValue(const std::string& key) const
 {
     auto it = config.find(key);
     if(it == config.end())
+    {
         throw std::runtime_error("Config: Error no config value " + key + " known");
-    
+    }
     return it->second;
 }
 

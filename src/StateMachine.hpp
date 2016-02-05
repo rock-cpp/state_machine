@@ -5,7 +5,9 @@
 #include <map>
 #include <vector>
 #include <queue>
+#include <unordered_set>
 #include "Events.hpp"
+#include "State.hpp"
 
 namespace state_machine
 {
@@ -74,7 +76,7 @@ public:
     
     void transitionTriggered(Transition *tr);
     
-    void registerPreemtptionState(State* state);
+    bool registerPreemtptionState(NetworkState* state);
     
     bool checkPreemption(State* preemptedState);
     void executePreemption();
@@ -82,12 +84,12 @@ public:
     State* getStateByName(std::string name);
     
 private:
-    std::queue<State*> preemptingStates;
+    std::queue<NetworkState*> preemptingStates;
   
     std::map<State *, std::string> states;
     std::map<Transition *, std::string> transistions;
     std::vector<serialization::Event> events;
-    std::vector<State*> preemptionStates;
+    std::unordered_set<NetworkState*> preemptionStates;
     
     std::stringstream debugStream;
     

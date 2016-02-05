@@ -1,17 +1,27 @@
-#ifndef STATE_H
-#define STATE_H
+#pragma once
 
 #include <vector>
 #include <iostream>
 #include <functional>
+#include <orocos_cpp/ConfigurationHelper.hpp>
+#include <orocos_cpp/TransformerHelper.hpp>
+#include "ArtemisRobot.hpp"
 
 namespace state_machine
 {
 
-//Classes
 class State;
 class Transition;
 class StateMachine;
+
+class TaskWithConfig
+{
+public:
+    RTT::TaskContext *task;
+    std::vector<std::string> config;
+};
+
+
 /**
  * This class represents a single State. Every state has a enter, execute and exit function. The functions are called like the names suggest. Every state has to have a individual id. This id is used 
 to display the StateMachine in the GUI
@@ -19,17 +29,18 @@ to display the StateMachine in the GUI
 class State 
 {
 public:
-    State(const std::string &name);
-    State(const std::string &name, State *success);
-    State(const std::string &name, State *success, State *failue);
+    State(const std::string &name) : State(name, nullptr, nullptr) {};
+    State(const std::string &name, State *success) : State(name, success, nullptr) {};
+    State(const std::string &name, State *success, State *failure);
+    
+    bool operator==(const State &other) { return id == other.id; };
+    
+    
     
     virtual ~State() {};
     virtual void exit() = 0;
     virtual void executeFunction() = 0;
-    /**
-     * Return true if interruption by this state is wanted, default returns false
-     */
-    virtual bool preemptionHook(State* preemptedState);
+    
     Transition *addEdge(const std::string &name, State* next, std::function<bool()> guard);
     void deleteEdge(Transition*);
   
@@ -116,15 +127,9 @@ public:
 
     bool finished() const;
     
-    /**
-     * Returns a State* to the parentState, if state is no substate it returns itself.
-     */
-    const State* getParentState() const;
-    
-    /**
-     * Sets pointer to parent state
-     */
-    void setParentState(const State* state);
+    const State* getParentState() const { return parentState; } ;
+    void setParentState(const State* state) { parentState = state; };
+   
   
     State* getSuccessState();
     State* getFailureState();
@@ -153,8 +158,44 @@ private:
     ///Name of the state.  
     std::string name;
     const State* parentState;
-    bool isPreemptable;
 };
 
+class NetworkState : public State 
+{
+private:
+    std::vector<std::string> *preemptingTasks;
+    bool preemptionWanted;
+    
+public:
+    NetworkState(const std::string& name);
+    void preempt(bool wanted) { preemptionWanted = wanted ; };
+    bool preemptionHook(State* preemptedState);
+};
+
+class InitState : public State 
+{
+private:
+    std::vector<TaskWithConfig> allTasks;
+    bool initialized;
+    orocos_cpp::ConfigurationHelper confHelper;
+    ArtemisRobot robot;
+    orocos_cpp::TransformerHelper* trHelper;
+    bool doLog; 
+    
+    void updateConfig(RTT::TaskContext *task, const std::vector<std::string> &configs);
+    void updateConfig(RTT::TaskContext *task, const std::string &config, const std::string &config2);   
+    void updateConfig(RTT::TaskContext *task, const std::string& config, const std::string& config2, const std::string& config3);
+    void registerWithConfig(RTT::TaskContext *task, const std::vector<std::string> &configs);
+    void registerWithConfig(RTT::TaskContext *task, const std::string &config = "default");
+    void registerWithConfig(RTT::TaskContext *task, const std::string &config, const std::string &config2);
+    void registerWithConfig(RTT::TaskContext *task, const std::string &config, const std::string &config2, const std::string &config3);
+    virtual bool setup();
+    virtual bool connect();
+    
+public:
+    InitState(const std::string& name, State* success, State* failure, bool doLog) : State(name, success, failure), doLog(doLog) {};
+    std::vector<TaskWithConfig> getAllTasks() { return allTasks; }
+};
+
+
 }
-#endif // STATE_H

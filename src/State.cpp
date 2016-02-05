@@ -6,26 +6,101 @@
 namespace state_machine
 {
 
-
-
-State::State(const std::string &name_) : State(name_, nullptr, nullptr)
+bool NetworkState::preemptionHook(State* preemptedState)
 {
-    parentState = this;
-    isPreemptable = false;
+    if(preemptionWanted) 
+    {
+        for( std::string stateName : *preemptingTasks) 
+        {
+            if(stateName == preemptedState->getName()) 
+            {
+                return true;
+            }
+        }
+    }
+    return false;
 }
 
-State::State(const std::string& name_, State* success) : State(name_, success, nullptr)
+NetworkState::NetworkState(const std::string& name): State(name)
 {
-    parentState = this;
-    isPreemptable = false;
+    preemptingTasks = new std::vector<std::string>();
 }
+
+void InitState::updateConfig(RTT::TaskContext* task, const std::vector< std::string >& configs)
+{
+    for(TaskWithConfig &t: allTasks)
+    {
+        if(t.task == task)
+        {
+            t.config = configs;
+            return;
+        }
+    }
+    
+    throw std::runtime_error("Init::updateConfig : No task " + task->getName() + " registered");
+}
+
+void InitState::updateConfig(RTT::TaskContext* task, const std::string& config, const std::string& config2)
+{
+    std::vector< std::string > configs;
+    configs.push_back(config);
+    configs.push_back(config2);
+    
+    updateConfig(task, configs);
+}
+
+void InitState::updateConfig(RTT::TaskContext* task, const std::string& config, const std::string& config2, const std::string& config3)
+{
+    std::vector< std::string > configs;
+    configs.push_back(config);
+    configs.push_back(config2);
+    configs.push_back(config3);
+    
+    updateConfig(task, configs);
+}
+
+void InitState::registerWithConfig(RTT::TaskContext* task, const std::vector< std::string >& configs)
+{
+    TaskWithConfig t;
+    t.task = task;
+    t.config = configs;
+    
+    allTasks.push_back(t);    
+}
+
+void InitState::registerWithConfig(RTT::TaskContext* task, const std::string& config)
+{
+    std::vector< std::string > configs;
+    configs.push_back(config);
+    
+    registerWithConfig(task, configs);
+}
+
+void InitState::registerWithConfig(RTT::TaskContext* task, const std::string& config, const std::string& config2)
+{
+    std::vector< std::string > configs;
+    configs.push_back(config);
+    configs.push_back(config2);
+    
+    registerWithConfig(task, configs);
+}
+
+void InitState::registerWithConfig(RTT::TaskContext* task, const std::string& config, const std::string& config2, const std::string& config3)
+{
+    std::vector< std::string > configs;
+    configs.push_back(config);
+    configs.push_back(config2);
+    configs.push_back(config3);
+
+    registerWithConfig(task, configs);
+}
+
 
 State::State(const std::string& name_, State* success, State* failue) : id(StateMachine::getInstance().getNewStateId()), msg(StateMachine::getInstance().getDebugStream()), 
                                          isFinished(false), hasFailed(false),  successState(success), failureState(failue), destroyOnExit(false), 
                                          name(name_)
 {
     parentState = this;
-    isPreemptable = false;
     StateMachine::getInstance().registerState(this);
     
     if(successState)
@@ -73,8 +148,10 @@ Transition* State::registerSubState(State* subState)
 
 Transition* State::checkTransitions() const
 {
-    for (Transition* transition : transitions) {
-        if (transition->guard()){
+    for (Transition* transition : transitions) 
+    {
+        if (transition->guard())
+        {
             return transition;
         }
     }
@@ -83,8 +160,10 @@ Transition* State::checkTransitions() const
 
 Transition* State::getSuccessTransition()
 {
-    for (Transition* tr : transitions) {
-        if(tr->next == getSuccessState()) {
+    for (Transition* tr : transitions) 
+    {
+        if(tr->next == getSuccessState()) 
+        {
             return tr;
         }
     }
@@ -93,14 +172,15 @@ Transition* State::getSuccessTransition()
 
 Transition* State::getFailureTransition()
 {
-    for (Transition* tr : transitions) {
-        if(tr->next == getFailureState()) {
+    for (Transition* tr : transitions) 
+    {
+        if(tr->next == getFailureState()) 
+        {
             return tr;
         }
     }
     return nullptr;
 }
-
 
 bool State::executeSubState(State *subState)
 {
@@ -132,26 +212,6 @@ bool State::finished() const
     return isFinished;
 }
 
-const State* State::getParentState() const
-{
-    if(!parentState) 
-    {
-        return this;
-    } 
-    else
-    {
-        return parentState;
-    }
-    
-}
-
-void State::setParentState(const State* state)
-{
-    parentState = state;
-}
-
-
-
 Transition *State::addEdge(const std::string &name, State* next, std::function<bool()> guard) 
 {
     Transition *tr = new Transition(name, this, next, guard);
@@ -161,11 +221,14 @@ Transition *State::addEdge(const std::string &name, State* next, std::function<b
 
 void State::deleteEdge(Transition* tr)
 {
-    if(!tr) {
+    if(!tr) 
+    {
 	return;
     }
-    for (unsigned i = 0; i < transitions.size(); i++) {
-        if (transitions[i]->getId() == tr->getId()) {
+    for (unsigned i = 0; i < transitions.size(); i++) 
+    {
+        if (transitions[i]->getId() == tr->getId()) 
+        {
             transitions.erase(transitions.begin() + i);
             return;
         }
@@ -183,24 +246,24 @@ const std::vector< State::SubState > &State::getSubStates() const
  */
 void State::deRegisterSubState(State *subState)
 {
-    if(!subState) {
+    if(!subState) 
+    {
     	return;
     }
     std::vector<SubState>::iterator it;
     it = subStates.begin();
-    while(it != subStates.end()) {
-        if(it->state->getId() == subState->getId()) {
+    while(it != subStates.end()) 
+    {
+        if(it->state->getId() == subState->getId()) 
+        {
             it = subStates.erase(it);
-        } else {
+        } 
+        else 
+        {
             it++;
         }
     }
     return;
-}
-
-bool State::preemptionHook(State* preemptedState)
-{
-    return false;
 }
 
 State* State::getFailureState()
@@ -212,7 +275,5 @@ State* State::getSuccessState()
 {
     return successState;
 }
-
-
 
 }

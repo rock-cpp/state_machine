@@ -1,5 +1,8 @@
 #include "RPCCall.hpp"
 
+namespace state_machine 
+{
+
 bool RPCCall::addArgument(std::string argName, void* data)
 {
     RTT::types::TypekitRepository::getTransports();
@@ -51,4 +54,6 @@ bool RPCCall::getArgument(int i, void* data)
     transport->unmarshal(args[i], handle);
     transport->refreshOrocosSample(handle);
     return true;
+}
+
 }

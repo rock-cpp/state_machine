@@ -1,5 +1,4 @@
-#ifndef EVENTS_H
-#define EVENTS_H
+#pragma once
 
 #include <string>
 #include <vector>
@@ -51,5 +50,5 @@ struct Event
 };
 
 }
+
 }
-#endif // EVENTS_H
