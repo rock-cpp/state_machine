@@ -182,6 +182,7 @@ private:
     ArtemisRobot robot;
     orocos_cpp::TransformerHelper* trHelper;
     bool doLog; 
+    bool sim;
     
     void updateConfig(RTT::TaskContext *task, const std::vector<std::string> &configs);
     void updateConfig(RTT::TaskContext *task, const std::string &config, const std::string &config2);   
@@ -190,14 +191,17 @@ private:
     void registerWithConfig(RTT::TaskContext *task, const std::string &config = "default");
     void registerWithConfig(RTT::TaskContext *task, const std::string &config, const std::string &config2);
     void registerWithConfig(RTT::TaskContext *task, const std::string &config, const std::string &config2, const std::string &config3);
-    virtual bool setup(bool real);
-    virtual bool connect(bool real);
+    virtual bool setup();
+    virtual bool connect();
+    bool configure();
+    bool start();
 
     
 public:
-    InitState(const std::string& name, State* success, State* failure, bool doLog) : State(name, success, failure), doLog(doLog) {};
+    InitState(const std::string& name, State* success, State* failure, bool doLog, bool sim) : State(name, success, failure), doLog(doLog), sim(sim) {};
     std::vector<TaskWithConfig> getAllTasks() { return allTasks; };
     std::vector<std::string> getExcludePortNames() { return excludePorts; };
+    void executeFunction();
 };
 
 

@@ -5,6 +5,57 @@
 
 namespace state_machine
 {
+    
+bool InitState::configure()
+{
+    for(TaskWithConfig &t: allTasks)
+    {
+        confHelper.applyConfig(t.task, t.config);
+        
+        if(!trHelper->configureTransformer(t.task))
+        {
+            throw std::runtime_error("Init::Failed to configure transformer for task " + t.task->getName());
+        }
+
+        std::cout << "Init::Configuring " << t.task->getName() << std::endl;
+        if(!t.task->configure())
+        {
+            std::string config = "[";
+            for(auto conf: t.config)
+            {
+                config += conf + ", ";
+            }
+            config += "]";
+            throw std::runtime_error("Init::Failed to configure task " + t.task->getName() + " with configuration " + config);
+        }
+        
+        std::cout << "Init::Configured " << t.task->getName() << std::endl;
+        
+    }
+    return true;
+}
+    
+bool InitState::start()
+{
+    for(TaskWithConfig &t: allTasks)
+    {
+        if(!t.task->start())
+        {
+            throw std::runtime_error("Init::Failed to start task " + t.task->getName());
+        }
+        std::cout << "Init::Started " << t.task->getName() << std::endl;
+
+    }
+    return true;
+}
+    
+void InitState::executeFunction()
+{
+    setup();
+    configure();
+    connect();
+    start();   
+}
 
 bool NetworkState::preemptionHook(State* preemptedState)
 {
