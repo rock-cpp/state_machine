@@ -55,12 +55,7 @@ public:
     
     /**
      * Removes a registered substate.
-     */class TaskWithConfig
-{
-public:
-    RTT::TaskContext *task;
-    std::vector<std::string> configs;
-};
+     */
     void deRegisterSubState(State *subState);
     
     /**
@@ -162,7 +157,5 @@ private:
     std::string name;
     const State* parentState;
 };
-
-
 
 }

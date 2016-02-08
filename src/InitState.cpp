@@ -1,5 +1,6 @@
 #include "InitState.hpp"
 
+namespace state_machine {
    
 bool InitState::configure()
 {
@@ -159,3 +160,6 @@ void InitState::setConfigNames(std::vector< std::string >& configNames)
 {
     taskWithConfig->configs = configNames;
 }
+
+}
+

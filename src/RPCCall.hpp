@@ -9,7 +9,9 @@
 
 namespace state_machine
 {
-class RPCCall {
+    
+class RPCCall 
+{
 private:
     std::vector<std::string> argTypeNames;
     std::vector<std::vector<uint8_t> > args;

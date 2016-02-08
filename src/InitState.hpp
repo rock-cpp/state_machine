@@ -1,7 +1,10 @@
 #pragma once
 #include "State.hpp"
 
-class InitState : public state_machine::State 
+namespace state_machine 
+{
+    
+class InitState : public State 
 {
 private:
     orocos_cpp::ConfigurationHelper confHelper;
@@ -32,11 +35,13 @@ protected:
 public:
     InitState(const std::string& name, const std::string taskName, State* success, State* failure, bool doLog, bool sim);
     TaskWithConfig* getTaskWithConfig() { return taskWithConfig; };
-    void enter() {};
-    void exit() {};
-    void executeFunction();
+    virtual void enter() {};
+    virtual void exit() {};
+    virtual void executeFunction();
     void setConfigNames(std::string &configName);
     void setConfigNames(std::string &configName1, std::string &configName2);
     void setConfigNames(std::string &configName1, std::string &configName2, std::string &configName3);
     void setConfigNames(std::vector<std::string> &configNames);
 };
+
+}

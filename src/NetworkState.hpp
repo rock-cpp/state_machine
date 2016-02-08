@@ -1,6 +1,9 @@
 #pragma once
 #include "State.hpp"
 
+namespace state_machine 
+{
+
 class NetworkState : public state_machine::State 
 {
 private:
@@ -12,3 +15,5 @@ public:
     void preempt(bool wanted) { preemptionWanted = wanted ; };
     bool preemptionHook(State* preemptedState);
 };
+
+}

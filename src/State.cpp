@@ -6,7 +6,6 @@
 namespace state_machine
 {
  
-
 State::State(const std::string& name_, State* success, State* failue) : id(StateMachine::getInstance().getNewStateId()), msg(StateMachine::getInstance().getDebugStream()), 
                                          isFinished(false), hasFailed(false),  successState(success), failureState(failue), destroyOnExit(false), 
                                          name(name_)
