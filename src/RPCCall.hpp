@@ -12,11 +12,10 @@ namespace state_machine
     
 class RPCCall 
 {
-private:
+public:
     std::vector<std::string> argTypeNames;
     std::vector<std::vector<uint8_t> > args;
     std::string methodName;
-public:
     RPCCall(){};
     RPCCall(std::string methodName) : methodName(methodName){};
     bool addArgument(std::string argName, void *data);
