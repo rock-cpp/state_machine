@@ -38,6 +38,7 @@ public:
     virtual ~State() {};
     virtual void exit() = 0;
     virtual void executeFunction() = 0;
+    virtual void enter(const State *lastState) = 0;
     
     Transition *addEdge(const std::string &name, State* next, std::function<bool()> guard);
     void deleteEdge(Transition*);
@@ -137,7 +138,7 @@ public:
     
     
 protected:
-    virtual void enter(const State *lastState) = 0;
+    
     const unsigned int id;
     std::vector<Transition *> transitions;
     std::vector<SubState> subStates;

@@ -19,7 +19,6 @@ protected:
     std::vector<InitState*> *dependencies;
     std::string taskName;
     
-    
     virtual bool setup() = 0;
     virtual void connect() = 0;
     virtual void initDependencies() = 0;
@@ -33,9 +32,9 @@ protected:
     void registerWithConfig(RTT::TaskContext *task, const std::string &config, const std::string &config2, const std::string &config3);
     
 public:
-    InitState(const std::string& name, const std::string taskName, State* success, State* failure, bool doLog, bool sim);
+    InitState(const std::string& name, const std::string &taskName, State* success, State* failure, bool doLog, bool sim);
     TaskWithConfig* getTaskWithConfig() { return taskWithConfig; };
-    virtual void enter() {};
+    virtual void enter(const State *lastState) {};
     virtual void exit() {};
     virtual void executeFunction();
     void setConfigNames(std::string &configName);

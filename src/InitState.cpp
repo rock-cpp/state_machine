@@ -147,7 +147,8 @@ void InitState::registerWithConfig(RTT::TaskContext* task, const std::string& co
     registerWithConfig(task, configs);
 }
 
-InitState::InitState(const std::string& name, const std::string taskName, State* success, State* failure, bool doLog, bool sim): State(name, success, failure), doLog(doLog), sim(sim) 
+InitState::InitState(const std::string& name, const std::string &taskName, State* success, State* failure, bool doLog, bool sim)
+    : State(name, success, failure), doLog(doLog), sim(sim) 
 {
     dependencies = new std::vector<InitState*>();
     std::vector<std::string> defaultConfig;
