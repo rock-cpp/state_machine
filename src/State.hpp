@@ -5,7 +5,6 @@
 #include <functional>
 #include <orocos_cpp/ConfigurationHelper.hpp>
 #include <orocos_cpp/TransformerHelper.hpp>
-#include "ArtemisRobot.hpp"
 
 namespace state_machine
 {
@@ -175,14 +174,16 @@ public:
 class InitState : public State 
 {
 private:
-    std::vector<TaskWithConfig> allTasks;
-    std::vector<std::string> excludePorts;
-    bool initialized;
     orocos_cpp::ConfigurationHelper confHelper;
-    ArtemisRobot robot;
     orocos_cpp::TransformerHelper* trHelper;
+    
     bool doLog; 
     bool sim;
+    bool initialized;
+    
+    std::string taskName;
+    std::vector<InitState*> *dependencies;
+    TaskWithConfig* taskWithConfig;
     
     void updateConfig(RTT::TaskContext *task, const std::vector<std::string> &configs);
     void updateConfig(RTT::TaskContext *task, const std::string &config, const std::string &config2);   
@@ -191,18 +192,17 @@ private:
     void registerWithConfig(RTT::TaskContext *task, const std::string &config = "default");
     void registerWithConfig(RTT::TaskContext *task, const std::string &config, const std::string &config2);
     void registerWithConfig(RTT::TaskContext *task, const std::string &config, const std::string &config2, const std::string &config3);
-    virtual void setup();
-    virtual void connect();
+    virtual void setup() = 0;
+    virtual void connect() = 0;
+    virtual void initDependencies() = 0;
     bool configure();
     void start();
-
     
 public:
-    InitState(const std::string& name, State* success, State* failure, bool doLog, bool sim) : State(name, success, failure), doLog(doLog), sim(sim) {};
-    std::vector<TaskWithConfig> getAllTasks() { return allTasks; };
-    std::vector<std::string> getExcludePortNames() { return excludePorts; };
+    InitState(const std::string& name, const std::string taskName, State* success, State* failure, bool doLog, bool sim) 
+        : State(name, success, failure), doLog(doLog), sim(sim) {};
+    TaskWithConfig* getTaskWithConfig() { return taskWithConfig; };
     void executeFunction();
 };
-
 
 }

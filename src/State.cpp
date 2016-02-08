@@ -10,54 +10,53 @@ bool InitState::configure()
 {
     bool success = true;
     
-    for(TaskWithConfig &t: allTasks)
+    if(!confHelper.applyConfig(taskWithConfig->task, taskWithConfig->config))
     {
-        
-        if(!confHelper.applyConfig(t.task, t.config))
-        {
-            success = false;
-        }
-        
-        if(!trHelper->configureTransformer(t.task))
-        {
-            throw std::runtime_error("Init::Failed to configure transformer for task " + t.task->getName());
-        }
-
-        std::cout << "Init::Configuring " << t.task->getName() << std::endl;
-        if(!t.task->configure())
-        {
-            std::string config = "[";
-            for(auto conf: t.config)
-            {
-                config += conf + ", ";
-            }
-            config += "]";
-            throw std::runtime_error("Init::Failed to configure task " + t.task->getName() + " with configuration " + config);
-        }
-        
-        std::cout << "Init::Configured " << t.task->getName() << std::endl;
-        
+        success = false;
     }
+    
+    if(!trHelper->configureTransformer(taskWithConfig->task))
+    {
+        throw std::runtime_error("Init::Failed to configure transformer for task " + taskWithConfig->task->getName());
+    }
+
+    std::cout << "Init::Configuring " << taskWithConfig->task->getName() << std::endl;
+    if(!taskWithConfig->task->configure())
+    {
+        std::string config = "[";
+        for(auto conf: taskWithConfig->config)
+        {
+            config += conf + ", ";
+        }
+        config += "]";
+        throw std::runtime_error("Init::Failed to configure task " + taskWithConfig->task->getName() + " with configuration " + config);
+    }
+    
+    std::cout << "Init::Configured " << taskWithConfig->task->getName() << std::endl;
     return success;
 }
     
 void InitState::start()
 {
-    for(TaskWithConfig &t: allTasks)
+    if(!taskWithConfig->task->start())
     {
-        if(!t.task->start())
-        {
-            throw std::runtime_error("Init::Failed to start task " + t.task->getName());
-        }
-        std::cout << "Init::Started " << t.task->getName() << std::endl;
-
+        throw std::runtime_error("Init::Failed to start task " + taskWithConfig->task->getName());
     }
+    std::cout << "Init::Started " << taskWithConfig->task->getName() << std::endl;
 }
     
 void InitState::executeFunction()
 {
     setup();
     configure();
+    initDependencies();
+    for(InitState* initState : *dependencies) 
+    {
+        if(!executeSubState(initState)) 
+        {
+            throw std::runtime_error("InitState::Failed to execute state " + initState->getName());
+        }
+    }
     connect();
     start();   
 }
@@ -84,15 +83,11 @@ NetworkState::NetworkState(const std::string& name): State(name)
 
 void InitState::updateConfig(RTT::TaskContext* task, const std::vector< std::string >& configs)
 {
-    for(TaskWithConfig &t: allTasks)
+    if(taskWithConfig->task == task)
     {
-        if(t.task == task)
-        {
-            t.config = configs;
-            return;
-        }
+        taskWithConfig->config = configs;
+        return;
     }
-    
     throw std::runtime_error("Init::updateConfig : No task " + task->getName() + " registered");
 }
 
@@ -117,11 +112,9 @@ void InitState::updateConfig(RTT::TaskContext* task, const std::string& config, 
 
 void InitState::registerWithConfig(RTT::TaskContext* task, const std::vector< std::string >& configs)
 {
-    TaskWithConfig t;
-    t.task = task;
-    t.config = configs;
-    
-    allTasks.push_back(t);    
+    taskWithConfig = new TaskWithConfig();
+    taskWithConfig->task = task;
+    taskWithConfig->config = configs; 
 }
 
 void InitState::registerWithConfig(RTT::TaskContext* task, const std::string& config)
