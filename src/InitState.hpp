@@ -25,7 +25,7 @@ protected:
     
     void updateConfig(RTT::TaskContext *task, const std::vector<std::string> &configs);
     void updateConfig(RTT::TaskContext *task, const std::string &config, const std::string &config2);   
-    void updateConfig(RTT::TaskContext *task, const std::string& config, const std::string& config2, const std::string& config3);
+    void updateConfig(RTT::TaskContext *task, const std::string &config, const std::string &config2, const std::string &config3);
     void registerWithConfig(RTT::TaskContext *task, const std::vector<std::string> &configs);
     void registerWithConfig(RTT::TaskContext *task, const std::string &config = "default");
     void registerWithConfig(RTT::TaskContext *task, const std::string &config, const std::string &config2);
@@ -37,9 +37,9 @@ public:
     virtual void enter(const State *lastState) {};
     virtual void exit() {};
     virtual void executeFunction();
-    void setConfigNames(std::string &configName);
-    void setConfigNames(std::string &configName1, std::string &configName2);
-    void setConfigNames(std::string &configName1, std::string &configName2, std::string &configName3);
+    void setConfigNames(const std::string &configName);
+    void setConfigNames(const std::string &configName1, const std::string &configName2);
+    void setConfigNames(const std::string &configName1, const std::string &configName2, const std::string &configName3);
     void setConfigNames(std::vector<std::string> &configNames);
 };
 

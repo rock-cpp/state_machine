@@ -64,20 +64,20 @@ void InitState::executeFunction()
     finish();
 }
 
-void InitState::setConfigNames(std::string& configName)
+void InitState::setConfigNames(const std::string& configName)
 {
    taskWithConfig->configs.clear();
    taskWithConfig->configs.push_back(configName);
 }
 
-void InitState::setConfigNames(std::string& configName1, std::string& configName2)
+void InitState::setConfigNames(const std::string& configName1, const std::string& configName2)
 {
     taskWithConfig->configs.clear();
     taskWithConfig->configs.push_back(configName1);
     taskWithConfig->configs.push_back(configName2);
 }
 
-void InitState::setConfigNames(std::string& configName1, std::string& configName2, std::string& configName3)
+void InitState::setConfigNames(const std::string& configName1, const std::string& configName2, const std::string& configName3)
 {
     taskWithConfig->configs.clear();
     taskWithConfig->configs.push_back(configName1);
