@@ -35,5 +35,8 @@ public:
     void enter() {};
     void exit() {};
     void executeFunction();
+    void setConfigNames(std::string &configName);
+    void setConfigNames(std::string &configName1, std::string &configName2);
+    void setConfigNames(std::string &configName1, std::string &configName2, std::string &configName3);
     void setConfigNames(std::vector<std::string> &configNames);
 };

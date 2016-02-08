@@ -63,6 +63,27 @@ void InitState::executeFunction()
     finish();
 }
 
+void InitState::setConfigNames(std::string& configName)
+{
+   taskWithConfig->configs.clear();
+   taskWithConfig->configs.push_back(configName);
+}
+
+void InitState::setConfigNames(std::string& configName1, std::string& configName2)
+{
+    taskWithConfig->configs.clear();
+    taskWithConfig->configs.push_back(configName1);
+    taskWithConfig->configs.push_back(configName2);
+}
+
+void InitState::setConfigNames(std::string& configName1, std::string& configName2, std::string& configName3)
+{
+    taskWithConfig->configs.clear();
+    taskWithConfig->configs.push_back(configName1);
+    taskWithConfig->configs.push_back(configName2);
+    taskWithConfig->configs.push_back(configName3);
+}
+
 void InitState::updateConfig(RTT::TaskContext* task, const std::vector< std::string > &configs)
 {
     if(taskWithConfig->task == task)
@@ -94,7 +115,6 @@ void InitState::updateConfig(RTT::TaskContext* task, const std::string& config, 
 
 void InitState::registerWithConfig(RTT::TaskContext* task, const std::vector< std::string >& configs)
 {
-    taskWithConfig = new TaskWithConfig();
     taskWithConfig->task = task;
     taskWithConfig->configs = configs; 
 }
