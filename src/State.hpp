@@ -17,9 +17,8 @@ class TaskWithConfig
 {
 public:
     RTT::TaskContext *task;
-    std::vector<std::string> config;
+    std::vector<std::string> configs;
 };
-
 
 /**
  * This class represents a single State. Every state has a enter, execute and exit function. The functions are called like the names suggest. Every state has to have a individual id. This id is used 
@@ -56,7 +55,12 @@ public:
     
     /**
      * Removes a registered substate.
-     */
+     */class TaskWithConfig
+{
+public:
+    RTT::TaskContext *task;
+    std::vector<std::string> configs;
+};
     void deRegisterSubState(State *subState);
     
     /**
@@ -159,50 +163,6 @@ private:
     const State* parentState;
 };
 
-class NetworkState : public State 
-{
-private:
-    std::vector<std::string> *preemptingTasks;
-    bool preemptionWanted;
-    
-public:
-    NetworkState(const std::string& name);
-    void preempt(bool wanted) { preemptionWanted = wanted ; };
-    bool preemptionHook(State* preemptedState);
-};
 
-class InitState : public State 
-{
-private:
-    orocos_cpp::ConfigurationHelper confHelper;
-    orocos_cpp::TransformerHelper* trHelper;
-    
-    bool doLog; 
-    bool sim;
-    bool initialized;
-    
-    std::string taskName;
-    std::vector<InitState*> *dependencies;
-    TaskWithConfig* taskWithConfig;
-    
-    void updateConfig(RTT::TaskContext *task, const std::vector<std::string> &configs);
-    void updateConfig(RTT::TaskContext *task, const std::string &config, const std::string &config2);   
-    void updateConfig(RTT::TaskContext *task, const std::string& config, const std::string& config2, const std::string& config3);
-    void registerWithConfig(RTT::TaskContext *task, const std::vector<std::string> &configs);
-    void registerWithConfig(RTT::TaskContext *task, const std::string &config = "default");
-    void registerWithConfig(RTT::TaskContext *task, const std::string &config, const std::string &config2);
-    void registerWithConfig(RTT::TaskContext *task, const std::string &config, const std::string &config2, const std::string &config3);
-    virtual void setup() = 0;
-    virtual void connect() = 0;
-    virtual void initDependencies() = 0;
-    bool configure();
-    void start();
-    
-public:
-    InitState(const std::string& name, const std::string taskName, State* success, State* failure, bool doLog, bool sim) 
-        : State(name, success, failure), doLog(doLog), sim(sim) {};
-    TaskWithConfig* getTaskWithConfig() { return taskWithConfig; };
-    void executeFunction();
-};
 
 }

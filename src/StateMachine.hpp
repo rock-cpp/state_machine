@@ -1,4 +1,5 @@
 #pragma once
+
 #include <functional>
 #include <base/Time.hpp>
 #include <sstream>
@@ -8,6 +9,7 @@
 #include <unordered_set>
 #include "Events.hpp"
 #include "State.hpp"
+#include "NetworkState.hpp"
 
 namespace state_machine
 {

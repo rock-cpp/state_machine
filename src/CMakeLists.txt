@@ -4,6 +4,8 @@ rock_library(state_machine
     SOURCES 
         Config.cpp
         State.cpp
+        InitState.cpp
+        NetworkState.cpp
         StateMachine.cpp
         Transition.cpp
         Events.cpp
@@ -15,6 +17,8 @@ rock_library(state_machine
         Transition.hpp
         Events.hpp
         RPCCall.hpp
+        InitState.hpp
+        NetworkState.hpp
     DEPS_PKGCONFIG 
         base-types
         yaml-cpp
