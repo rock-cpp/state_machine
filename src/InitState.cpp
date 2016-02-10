@@ -159,12 +159,12 @@ void InitState::spawnDeployment(const std::string& deploymentName)
     }
 }
 
-void InitState::spawnTask(const std::string& taskName)
+void InitState::spawnTask(const std::string &type, const std::string& taskName)
 {
     if(std::find(spawnedTasks->begin(), spawnedTasks->end(), taskName) == spawnedTasks->end()) 
     {
         orocos_cpp::Spawner &spawner(orocos_cpp::Spawner::getInstace());
-        spawner.spawnTask(taskName);
+        spawner.spawnTask(type, taskName);
         spawnedTasks->push_back(taskName);
     }
 }
