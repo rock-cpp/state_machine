@@ -59,11 +59,24 @@ void InitState::start()
         msg << "InitState::Started " << taskWithConfig->task->getName() << std::endl;
     }
 }
+
+bool InitState::stateAlreadyConfigured()
+{
+    for(TaskWithConfig* taskWithConfig : tasksWithConfig) 
+    {
+        if(taskWithConfig->task->isConfigured() || taskWithConfig->task->isRunning()) 
+        {
+            return true;
+        }
+    }
+    return false;
+}
     
 void InitState::executeFunction()
 {
-    if(setup()) 
+    if(stateAlreadyConfigured()) 
     {
+        setup();
         configure();
         initDependencies();
         for(InitState* initState : *dependencies) 
@@ -79,7 +92,6 @@ void InitState::executeFunction()
     else 
     {
         msg << "The state " << name << " already configured, ignoring!" << std::endl;
-        fail();
     }
     finish();
 }

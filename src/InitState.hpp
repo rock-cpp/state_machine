@@ -12,7 +12,8 @@ private:
     orocos_cpp::TransformerHelper* trHelper;
     void configure();
     void start();
-    
+    bool stateAlreadyConfigured();
+
 protected:
     bool doLog; 
     bool sim;
@@ -20,13 +21,10 @@ protected:
     std::vector<TaskWithConfig*> tasksWithConfig;
     std::vector<InitState*> *dependencies;
     
-    virtual bool setup() = 0;
+    virtual void setup() = 0;
     virtual void connect() = 0;
     virtual void initDependencies() = 0;
-    void setTaskName(const std::string taskName);
-    void setTaskNames(std::vector<std::string> &taskName);
     static std::vector<std::string> *spawnedTasks;
-        
     void spawnDeployment(const std::string &deploymentName);
     void spawnTask(const std::string &taskName);
     
@@ -37,6 +35,8 @@ public:
     virtual void enter(const State *lastState) {};
     virtual void exit() {};
     virtual void executeFunction();
+    void setTaskName(const std::string taskName);
+    void setTaskNames(std::vector<std::string> &taskName);
     void registerWithConfig(RTT::TaskContext *task, const std::vector<std::string> &configs);
     void registerWithConfig(RTT::TaskContext *task, const std::string &config = "default");
     void registerWithConfig(RTT::TaskContext *task, const std::string &config, const std::string &config2);
