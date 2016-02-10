@@ -76,6 +76,7 @@ void InitState::executeFunction()
 {
     if(stateAlreadyConfigured()) 
     {
+        spawnTasks();
         setup();
         configure();
         initDependencies();

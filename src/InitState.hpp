@@ -27,6 +27,7 @@ protected:
     static std::vector<std::string> *spawnedTasks;
     void spawnDeployment(const std::string &deploymentName);
     void spawnTask(const std::string &taskName);
+    virtual void spawnTasks() = 0;
     
 public:
     InitState(const std::string& name, State* success, State* failure, bool doLog, bool sim);
