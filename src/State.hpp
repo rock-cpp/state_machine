@@ -152,11 +152,9 @@ protected:
     
     
     bool destroyOnExit;
-  
-private:
-    ///Name of the state.  
     std::string name;
     const State* parentState;
+
 };
 
 }

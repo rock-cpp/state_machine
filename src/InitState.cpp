@@ -1,44 +1,63 @@
 #include "InitState.hpp"
 
-namespace state_machine {
-   
-bool InitState::configure()
+namespace state_machine 
 {
-    bool success = true;
-    
-    if(!confHelper.applyConfig(taskWithConfig->task, taskWithConfig->configs))
+   
+TaskWithConfig* InitState::getTaskWithConfig(RTT::TaskContext* task)
+{
+    for(TaskWithConfig* taskWithConfig : tasksWithConfig) 
     {
-        success = false;
-    }
-    
-    if(!trHelper->configureTransformer(taskWithConfig->task))
-    {
-        throw std::runtime_error("Init::Failed to configure transformer for task " + taskWithConfig->task->getName());
-    }
-
-    std::cout << "Init::Configuring " << taskWithConfig->task->getName() << std::endl;
-    if(!taskWithConfig->task->configure())
-    {
-        std::string config = "[";
-        for(auto conf: taskWithConfig->configs)
+        if(taskWithConfig->task->getName() == task->getName()) 
         {
-            config += conf + ", ";
+            return taskWithConfig;
         }
-        config += "]";
-        throw std::runtime_error("Init::Failed to configure task " + taskWithConfig->task->getName() + " with configuration " + config);
     }
+    TaskWithConfig* taskWithConfig = new TaskWithConfig();
+    taskWithConfig->task = task;
+    tasksWithConfig.push_back(taskWithConfig);
+    return taskWithConfig;
+}
     
-    std::cout << "Init::Configured " << taskWithConfig->task->getName() << std::endl;
-    return success;
+void InitState::configure()
+{
+    for(TaskWithConfig* taskWithConfig : tasksWithConfig) 
+    {
+        if(!confHelper.applyConfig(taskWithConfig->task, taskWithConfig->configs))
+        {
+            throw std::runtime_error("InitState::Failed to apply config to task " + taskWithConfig->task->getName());
+        }
+        
+        if(!trHelper->configureTransformer(taskWithConfig->task))
+        {
+            throw std::runtime_error("InitState::Failed to configure transformer for task " + taskWithConfig->task->getName());
+        }
+
+        msg << "InitState::Configuring " << taskWithConfig->task->getName() << std::endl;
+        if(!taskWithConfig->task->configure())
+        {
+            std::string config = "[";
+            for(auto conf: taskWithConfig->configs)
+            {
+                config += conf + ", ";
+            }
+            config += "]";
+            throw std::runtime_error("InitState::Failed to configure task " + taskWithConfig->task->getName() + " with configuration " + config);
+        }
+        
+        msg << "InitState::Configured " << taskWithConfig->task->getName() << std::endl;
+    }
 }
     
 void InitState::start()
 {
-    if(!taskWithConfig->task->start())
+    for(TaskWithConfig* taskWithConfig : tasksWithConfig) 
     {
-        throw std::runtime_error("Init::Failed to start task " + taskWithConfig->task->getName());
+        if(!taskWithConfig->task->start())
+        {
+            throw std::runtime_error("InitState::Failed to start task " + taskWithConfig->task->getName());
+        }
+        msg << "InitState::Started " << taskWithConfig->task->getName() << std::endl;
     }
-    std::cout << "Init::Started " << taskWithConfig->task->getName() << std::endl;
 }
     
 void InitState::executeFunction()
@@ -59,72 +78,34 @@ void InitState::executeFunction()
     } 
     else 
     {
-        std::cout << getName() << "::" << taskWithConfig->task->getName() << " already configured, ignoring!" << std::endl;
+        msg << "The state " << name << " already configured, ignoring!" << std::endl;
+        fail();
     }
     finish();
 }
 
-void InitState::setConfigNames(const std::string& configName)
+void InitState::setTaskName (const std::string taskName)
 {
-   taskWithConfig->configs.clear();
-   taskWithConfig->configs.push_back(configName);
+    taskNames.clear();
+    taskNames.push_back(taskName);
 }
 
-void InitState::setConfigNames(const std::string& configName1, const std::string& configName2)
+void InitState::setTaskNames (std::vector<std::string> &taskNames)
 {
-    taskWithConfig->configs.clear();
-    taskWithConfig->configs.push_back(configName1);
-    taskWithConfig->configs.push_back(configName2);
-}
-
-void InitState::setConfigNames(const std::string& configName1, const std::string& configName2, const std::string& configName3)
-{
-    taskWithConfig->configs.clear();
-    taskWithConfig->configs.push_back(configName1);
-    taskWithConfig->configs.push_back(configName2);
-    taskWithConfig->configs.push_back(configName3);
-}
-
-void InitState::updateConfig(RTT::TaskContext* task, const std::vector< std::string > &configs)
-{
-    if(taskWithConfig->task == task)
-    {
-        taskWithConfig->configs = configs;
-        return;
-    }
-    throw std::runtime_error("Init::updateConfig : No task " + task->getName() + " registered");
-}
-
-void InitState::updateConfig(RTT::TaskContext* task, const std::string& config, const std::string& config2)
-{
-    std::vector< std::string > configs;
-    configs.push_back(config);
-    configs.push_back(config2);
-    
-    updateConfig(task, configs);
-}
-
-void InitState::updateConfig(RTT::TaskContext* task, const std::string& config, const std::string& config2, const std::string& config3)
-{
-    std::vector< std::string > configs;
-    configs.push_back(config);
-    configs.push_back(config2);
-    configs.push_back(config3);
-    
-    updateConfig(task, configs);
+    this->taskNames = taskNames;
 }
 
 void InitState::registerWithConfig(RTT::TaskContext* task, const std::vector< std::string >& configs)
 {
+    TaskWithConfig* taskWithConfig = getTaskWithConfig(task);
     taskWithConfig->task = task;
-    taskWithConfig->configs = configs; 
+    taskWithConfig->configs = configs;
 }
 
 void InitState::registerWithConfig(RTT::TaskContext* task, const std::string &config)
 {
     std::vector< std::string > configs;
     configs.push_back(config);
-    
     registerWithConfig(task, configs);
 }
 
@@ -133,7 +114,6 @@ void InitState::registerWithConfig(RTT::TaskContext* task, const std::string& co
     std::vector< std::string > configs;
     configs.push_back(config);
     configs.push_back(config2);
-    
     registerWithConfig(task, configs);
 }
 
@@ -143,24 +123,37 @@ void InitState::registerWithConfig(RTT::TaskContext* task, const std::string& co
     configs.push_back(config);
     configs.push_back(config2);
     configs.push_back(config3);
-
-    registerWithConfig(task, configs);
+    registerWithConfig(task, configs);  
 }
 
-InitState::InitState(const std::string& name, const std::string &taskName, State* success, State* failure, bool doLog, bool sim)
+InitState::InitState(const std::string &name, State* success, State* failure, bool doLog, bool sim)
     : State(name, success, failure), doLog(doLog), sim(sim) 
 {
     dependencies = new std::vector<InitState*>();
-    std::vector<std::string> defaultConfig;
-    defaultConfig.push_back("default");
-    taskWithConfig = new TaskWithConfig();
-    taskWithConfig->configs = defaultConfig;
+    if(!spawnedTasks) 
+    {
+        spawnedTasks = new std::vector<std::string>();
+    }
 }
 
-void InitState::setConfigNames(std::vector< std::string >& configNames)
+void InitState::spawnDeployment(const std::string& deploymentName)
 {
-    taskWithConfig->configs = configNames;
+    if(std::find(spawnedTasks->begin(), spawnedTasks->end(), deploymentName) == spawnedTasks->end()) 
+    {
+        orocos_cpp::Spawner &spawner(orocos_cpp::Spawner::getInstace());
+        spawner.spawnDeployment(deploymentName);
+        spawnedTasks->push_back(deploymentName);
+    }
+}
+
+void InitState::spawnTask(const std::string& taskName)
+{
+    if(std::find(spawnedTasks->begin(), spawnedTasks->end(), taskName) == spawnedTasks->end()) 
+    {
+        orocos_cpp::Spawner &spawner(orocos_cpp::Spawner::getInstace());
+        spawner.spawnTask(taskName);
+        spawnedTasks->push_back(taskName);
+    }
 }
 
 }
-
