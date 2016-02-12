@@ -5,6 +5,7 @@
 namespace state_machine 
 {
     
+static std::vector<std::string> *spawnedTasks;
 class InitState : public State 
 {
 private:
@@ -24,7 +25,6 @@ protected:
     virtual void setup() = 0;
     virtual void connect() = 0;
     virtual void initDependencies() = 0;
-    static std::vector<std::string> *spawnedTasks;
     void spawnDeployment(const std::string &deploymentName);
     void spawnTask(const std::string &type, const std::string &taskName);
     virtual void spawnTasks() = 0;

@@ -22,6 +22,7 @@ rock_library(state_machine
     DEPS_PKGCONFIG 
         base-types
         yaml-cpp
+        orocos_cpp
     DEPS_PLAIN 
         Boost_SYSTEM Boost_FILESYSTEM 
 
