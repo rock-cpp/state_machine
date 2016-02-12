@@ -2,7 +2,7 @@
 #include "StateMachine.hpp"
 #include "Transition.hpp"
 
-
+ 
 namespace state_machine
 {
  
