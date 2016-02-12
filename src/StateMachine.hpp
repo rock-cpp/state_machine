@@ -1,15 +1,11 @@
 #pragma once
-
 #include <functional>
 #include <base/Time.hpp>
 #include <sstream>
 #include <map>
 #include <vector>
 #include <queue>
-#include <unordered_set>
 #include "Events.hpp"
-#include "State.hpp"
-#include "NetworkState.hpp"
 
 namespace state_machine
 {
@@ -78,7 +74,7 @@ public:
     
     void transitionTriggered(Transition *tr);
     
-    bool registerPreemtptionState(NetworkState* state);
+    void registerPreemtptionState(State* state);
     
     bool checkPreemption(State* preemptedState);
     void executePreemption();
@@ -86,12 +82,12 @@ public:
     State* getStateByName(std::string name);
     
 private:
-    std::queue<NetworkState*> preemptingStates;
+    std::queue<State*> preemptingStates;
   
     std::map<State *, std::string> states;
     std::map<Transition *, std::string> transistions;
     std::vector<serialization::Event> events;
-    std::unordered_set<NetworkState*> preemptionStates;
+    std::vector<State*> preemptionStates;
     
     std::stringstream debugStream;
     

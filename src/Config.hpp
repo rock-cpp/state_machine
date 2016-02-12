@@ -1,4 +1,5 @@
-#pragma once
+#ifndef TASKMANAGEMET_CONFIG_HPP__
+#define TASKMANAGEMET_CONFIG_HPP__
 
 #include <string>
 #include <map>
@@ -10,6 +11,7 @@ class Config
 {
 private:
     Config();
+    
     std::map<std::string, std::string> config;
     
 public:
@@ -24,9 +26,10 @@ public:
      * config object. It must only be called after the initalization.
      * */
     static Config &getConfig();
- 
+    
     const std::string &getValue(const std::string& key) const;
     
 };
 
 }
+#endif //TASKMANAGEMET_CONFIG_HPP__

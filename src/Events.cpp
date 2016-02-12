@@ -7,14 +7,13 @@ state_machine::serialization::State::State(const state_machine::State& state)
 {
     name = "    " + state.getName() + "    ";
     id = state.getId();
-    if (!state.getParentState()) 
-    {
+    if (!state.getParentState()) {
         parentId = id;
-    } 
-    else 
-    {
+    } else {
         parentId = state.getParentState()->getId();
     }
+    
+    
 }
 
 state_machine::serialization::Transition::Transition(const state_machine::Transition& trans)
@@ -28,12 +27,15 @@ state_machine::serialization::Transition::Transition(const state_machine::Transi
     {
         from = State(*(trans.prev));
     }
+    
     name = "    " + trans.getName() + "    ";
+    
     id = trans.getId();
 }
 
 state_machine::serialization::StateMachine::StateMachine(const state_machine::StateMachine& sm)
 {
+    //dump state machine 
     for(auto const &p: sm.getAllStates())
     {
         State state(*(p.first));

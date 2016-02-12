@@ -3,7 +3,6 @@
 #include <boost/lexical_cast.hpp>
 #include "State.hpp"
 #include "Transition.hpp"
-#include "RPCCall.hpp"
 
 namespace state_machine
 {
@@ -15,21 +14,26 @@ StateMachine::StateMachine() : currentState(nullptr), idCounterState(0), idCount
     executeCallback = [](){};
 }
 
-bool StateMachine::registerPreemtptionState(NetworkState* state)
+void StateMachine::registerPreemtptionState(State* state)
 {
-    return preemptionStates.insert(state).second;
+    for (State* st : preemptionStates) {
+        if (st->getId() == state->getId()) {
+            return;
+        }
+    }
+    preemptionStates.push_back(state);
+    return;
 }
+
 
 /**
  * Executes preemtion, checkPreemption has to be run first, returns value of executeSubState for every preemptingState as a map State*,bool
  */
 void StateMachine::executePreemption()
 {
-    while(!preemptingStates.empty()) 
-    {
+    while(!preemptingStates.empty()) {
       State* preemptingState = preemptingStates.front();
-      if(preemptingState && currentState->getId() != preemptingState->getId()) 
-      {
+      if(preemptingState && currentState->getId() != preemptingState->getId()) {
 	  //Add Edge to have transition from preemtionState to currentState, so executeSubState can finish
 	  Transition* premptionSuccess = preemptingState->addEdge("Preemption done", currentState, [&](){return preemptingState->finished();});
 	  
@@ -46,19 +50,19 @@ void StateMachine::executePreemption()
 	  
 	  currentState->deRegisterSubState(preemptingState);
 	  
-	  if(oldFailureTr) 
-          {
+	  if(oldFailureTr) {
 	      preemptingState->addEdge(oldFailureTr->getName(), oldFailureTr->next, oldFailureTr->guard);
 	  }
-	  if(oldSuccessTr) 
-          {
+	  if(oldSuccessTr) {
 	      preemptingState->addEdge(oldSuccessTr->getName(), oldSuccessTr->next, oldSuccessTr->guard);
 	  }
 	  preemptingState->deleteEdge(premptionSuccess);
 	  preemptingState->deleteEdge(toSubState);
+	  
       }
       preemptingStates.pop();
     }
+    return;
 }
 
 
@@ -68,7 +72,7 @@ void StateMachine::executePreemption()
 bool StateMachine::checkPreemption(State* preemptedState)
 {
     bool preempted = false;
-    for(NetworkState* state : preemptionStates) 
+    for(State* state : preemptionStates) 
     {
 	if(currentState->getId() != state->getId() && state->preemptionHook(preemptedState)) 
 	{
@@ -86,22 +90,29 @@ bool StateMachine::checkPreemption(State* preemptedState)
 bool StateMachine::execute()
 {
     lastUpdate = base::Time::now();
-    Transition *transition = currentState->checkTransitions();
     
+    Transition *transition = currentState->checkTransitions();
+
     if(transition)
     {
         transitionTriggered(transition);
         currentState->exit();
         transition->next->enterExt(currentState);
+
         if(currentState->autoDestroy())
-        {
             delete currentState;
-        }
+        
         currentState = transition->next;
     }
+    
+
+    
     currentState->executeFunction();
+
     executeCallback();
+    
     timePassed = base::Time::now() - lastUpdate;
+    //   helper->message("Executed in " + std::to_string(timePassed.toMicroseconds()) + " µs");
     if (timePassed < executionStep) 
     {
         usleep((executionStep - timePassed).toMicroseconds());
@@ -112,6 +123,7 @@ bool StateMachine::execute()
 bool StateMachine::executeSubState(State* subState)
 {
     State *executingState = currentState;
+    
     State::SubState sub;
     bool found = false;
     for(const State::SubState &s : currentState->getSubStates())
@@ -130,37 +142,46 @@ bool StateMachine::executeSubState(State* subState)
     }
     
     transitionTriggered(sub.toSubState);
+
     currentState = subState;
     currentState->enterExt(executingState);
     
     while(true)
     {
         lastUpdate = base::Time::now();
+        
         Transition *transition = currentState->checkTransitions();
         
         if(transition)
-        { 
+        {
+            
             transitionTriggered(transition);
             currentState->exit();
             if(transition->next == executingState)
             {
-                bool result = currentState->finished();  
-                if(currentState->autoDestroy()) 
-                {
+                bool result = currentState->finished();
+                
+                if(currentState->autoDestroy())
                     delete currentState;
-                }
+                
                 currentState = transition->next;
+                
                 return result;
             }
+            
             transition->next->enterExt(currentState);
-            if(currentState->autoDestroy()) 
-            {
+
+            if(currentState->autoDestroy())
                 delete currentState;
-            }
+            
             currentState = transition->next;
         }
+        
+        
         currentState->executeFunction();
+        
         executeCallback();
+        
         timePassed = base::Time::now() - lastUpdate;
         if (timePassed < executionStep) 
         {
@@ -172,10 +193,8 @@ bool StateMachine::executeSubState(State* subState)
 
 State* StateMachine::getStateByName(std::string name)
 {
-    for (auto entry : states) 
-    {
-        if(entry.second.compare(name) == 0) 
-        {
+    for (auto entry : states) {
+        if(entry.second.compare(name) == 0) {
             return entry.first;
         }
     }
@@ -230,13 +249,17 @@ void StateMachine::deRegisterState(State* state)
 void StateMachine::start(State* initState)
 {
     currentState = initState;
+    
     serialization::Event ev;
     ev.id = currentState->getId();
     ev.type = serialization::StateChanged;
     events.push_back(ev);
+
     lastUpdate = base::Time::now();
+    
     currentState->enterExt(nullptr);
+    
     currentState->executeFunction();
-}
+};
 
 }
