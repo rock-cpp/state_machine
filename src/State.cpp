@@ -6,7 +6,7 @@
 namespace state_machine
 {
  
-State::State(const std::string& name_, State* success, State* failue) : id(StateMachine::getInstance().getNewStateId()), msg(StateMachine::getInstance().getDebugStream()), 
+State::State(const std::string& name_, State* success, State* failue) : msg(StateMachine::getInstance().getDebugStream()), 
                                          isFinished(false), hasFailed(false),  successState(success), failureState(failue), destroyOnExit(false), 
                                          name(name_)
 {
@@ -23,6 +23,13 @@ State::State(const std::string& name_, State* success, State* failue) : id(State
         addEdge("Failed", failureState, [&](){return failed();});
     }
 }
+
+void State::generateId(std::string id)
+{
+    std::hash<std::string> hash_fn;
+    id = hash_fn(id);
+}
+
 
 void State::enterExt(const State* lastState)
 {

@@ -31,10 +31,6 @@ public:
     State(const std::string &name, State *success) : State(name, success, nullptr) {};
     State(const std::string &name, State *success, State *failure);
     
-    bool operator==(const State &other) { return id == other.id; };
-    
-    
-    
     virtual ~State() {};
     virtual void exit() = 0;
     virtual void executeFunction() = 0;
@@ -42,6 +38,8 @@ public:
     
     Transition *addEdge(const std::string &name, State* next, std::function<bool()> guard);
     void deleteEdge(Transition*);
+    
+    virtual void generateId(std::string id);
   
     virtual void enterExt(const State *lastState);
     
@@ -139,7 +137,7 @@ public:
     
 protected:
     
-    const unsigned int id;
+    int id;
     std::vector<Transition *> transitions;
     std::vector<SubState> subStates;
     std::ostream &msg;

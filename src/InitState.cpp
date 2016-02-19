@@ -113,6 +113,14 @@ void InitState::registerWithConfig(RTT::TaskContext* task, const std::vector< st
     TaskWithConfig* taskWithConfig = getTaskWithConfig(task);
     taskWithConfig->task = task;
     taskWithConfig->configs = configs;
+    std::string uniqueName = "";
+    for(TaskWithConfig* tC : tasksWithConfig) {
+        uniqueName.append(tC->task->getName());
+        for(std::string s : taskWithConfig->configs) {
+            uniqueName.append(s);
+        }
+    }
+    generateId(uniqueName);
 }
 
 void InitState::registerWithConfig(RTT::TaskContext* task, const std::string &config)
