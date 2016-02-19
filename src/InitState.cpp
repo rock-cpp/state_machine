@@ -1,4 +1,5 @@
 #include "InitState.hpp"
+#include <utility>
 
 namespace state_machine 
 {
@@ -97,22 +98,15 @@ void InitState::executeFunction()
     finish();
 }
 
-void InitState::setTaskName (const std::string taskName)
-{
-    taskNames.clear();
-    taskNames.push_back(taskName);
-}
 
-void InitState::setTaskNames (std::vector<std::string> &taskNames)
-{
-    this->taskNames = taskNames;
-}
 
-void InitState::registerWithConfig(RTT::TaskContext* task, const std::vector< std::string >& configs)
+void InitState::registerWithConfig(RTT::TaskContext* task, std::string taskName, const std::vector< std::string >& configs)
 {
+    allInitStates->erase(id);
     TaskWithConfig* taskWithConfig = getTaskWithConfig(task);
     taskWithConfig->task = task;
     taskWithConfig->configs = configs;
+    taskWithConfig->taskName = taskName;
     std::string uniqueName = "";
     for(TaskWithConfig* tC : tasksWithConfig) {
         uniqueName.append(tC->task->getName());
@@ -121,30 +115,38 @@ void InitState::registerWithConfig(RTT::TaskContext* task, const std::vector< st
         }
     }
     generateId(uniqueName);
+    allInitStates->insert({id,this});
 }
 
-void InitState::registerWithConfig(RTT::TaskContext* task, const std::string &config)
+void InitState::registerWithConfig(RTT::TaskContext* task, std::string taskName)
+{
+    std::vector< std::string > configs;
+    registerWithConfig(task, taskName, configs);
+}
+
+
+void InitState::registerWithConfig(RTT::TaskContext* task, std::string taskName, const std::string &config)
 {
     std::vector< std::string > configs;
     configs.push_back(config);
-    registerWithConfig(task, configs);
+    registerWithConfig(task, taskName, configs);
 }
 
-void InitState::registerWithConfig(RTT::TaskContext* task, const std::string& config, const std::string& config2)
+void InitState::registerWithConfig(RTT::TaskContext* task, std::string taskName, const std::string& config, const std::string& config2)
 {
     std::vector< std::string > configs;
     configs.push_back(config);
     configs.push_back(config2);
-    registerWithConfig(task, configs);
+    registerWithConfig(task, taskName, configs);
 }
 
-void InitState::registerWithConfig(RTT::TaskContext* task, const std::string& config, const std::string& config2, const std::string& config3)
+void InitState::registerWithConfig(RTT::TaskContext* task, std::string taskName, const std::string& config, const std::string& config2, const std::string& config3)
 {
     std::vector< std::string > configs;
     configs.push_back(config);
     configs.push_back(config2);
     configs.push_back(config3);
-    registerWithConfig(task, configs);  
+    registerWithConfig(task, taskName, configs);  
 }
 
 InitState::InitState(const std::string &name, State* success, State* failure, bool doLog, bool sim)
@@ -155,6 +157,11 @@ InitState::InitState(const std::string &name, State* success, State* failure, bo
     {
         spawnedTasks = new std::vector<std::string>();
     }
+    if(!allInitStates) {
+        allInitStates = new std::unordered_map<int, InitState*>();
+    }
+    allInitStates->erase(id);
+    allInitStates->insert({id, this});
 }
 
 void InitState::spawnDeployment(const std::string& deploymentName)

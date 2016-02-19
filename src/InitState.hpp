@@ -1,6 +1,7 @@
 #pragma once
 #include "State.hpp"
 #include <orocos_cpp/Spawner.hpp>
+#include <unordered_map>
 
 namespace state_machine 
 {
@@ -11,6 +12,7 @@ class InitState : public State
 private:
     orocos_cpp::ConfigurationHelper confHelper;
     orocos_cpp::TransformerHelper* trHelper;
+    static std::unordered_map<int, InitState*> *allInitStates;
     void configure();
     void start();
     bool stateAlreadyConfigured();
@@ -36,12 +38,11 @@ public:
     virtual void enter(const State *lastState) {};
     virtual void exit() {};
     virtual void executeFunction();
-    void setTaskName(const std::string taskName);
-    void setTaskNames(std::vector<std::string> &taskName);
-    void registerWithConfig(RTT::TaskContext *task, const std::vector<std::string> &configs);
-    void registerWithConfig(RTT::TaskContext *task, const std::string &config = "default");
-    void registerWithConfig(RTT::TaskContext *task, const std::string &config, const std::string &config2);
-    void registerWithConfig(RTT::TaskContext *task, const std::string &config, const std::string &config2, const std::string &config3);
+    void registerWithConfig(RTT::TaskContext *task, std::string taskName, const std::vector<std::string> &configs);
+    void registerWithConfig(RTT::TaskContext *task, std::string taskName);
+    void registerWithConfig(RTT::TaskContext *task, std::string taskName, const std::string &config);
+    void registerWithConfig(RTT::TaskContext *task, std::string taskName, const std::string &config, const std::string &config2);
+    void registerWithConfig(RTT::TaskContext *task, std::string taskName, const std::string &config, const std::string &config2, const std::string &config3);
 };
 
 }

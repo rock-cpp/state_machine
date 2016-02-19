@@ -12,7 +12,7 @@ State::State(const std::string& name_, State* success, State* failue) : msg(Stat
 {
     parentState = this;
     StateMachine::getInstance().registerState(this);
-    
+    generateId(name);
     if(successState)
     {
         addEdge("Success", successState, [&](){return finished();});

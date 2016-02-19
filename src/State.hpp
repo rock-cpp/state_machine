@@ -17,6 +17,7 @@ class TaskWithConfig
 {
 public:
     RTT::TaskContext *task;
+    std::string taskName;
     std::vector<std::string> configs;
 };
 
