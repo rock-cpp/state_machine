@@ -75,7 +75,7 @@ bool InitState::stateAlreadyConfigured()
     
 void InitState::executeFunction()
 {
-    if(stateAlreadyConfigured()) 
+    if(!stateAlreadyConfigured() && allInitStates->find(id) != allInitStates->end()) 
     {
         spawnTasks();
         setup();
@@ -90,6 +90,7 @@ void InitState::executeFunction()
         }
         connect();
         start();   
+        allInitStates->erase(id);
     } 
     else 
     {
@@ -97,8 +98,6 @@ void InitState::executeFunction()
     }
     finish();
 }
-
-
 
 void InitState::registerWithConfig(RTT::TaskContext* task, std::string taskName, const std::vector< std::string >& configs)
 {
@@ -157,12 +156,15 @@ InitState::InitState(const std::string &name, State* success, State* failure, bo
     {
         spawnedTasks = new std::vector<std::string>();
     }
-    if(!allInitStates) {
+    if(!allInitStates) 
+    {
         allInitStates = new std::unordered_map<int, InitState*>();
     }
     allInitStates->erase(id);
     allInitStates->insert({id, this});
 }
+
+
 
 void InitState::spawnDeployment(const std::string& deploymentName)
 {
