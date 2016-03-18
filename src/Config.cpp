@@ -21,21 +21,17 @@ Config& Config::getConfig(const std::string& configFile)
     
     try
     {
-            std::ifstream fin(configFile);
-            YAML::Parser parser(fin);
-            YAML::Node doc;
+            YAML::Node doc = YAML::LoadFile(configFile);
             
             std::cout << "Parsing config ..." << std::endl;
-            parser.GetNextDocument(doc);
             for(unsigned int i = 0; i < doc.size(); i++)
             {
                 for(auto it = doc[i].begin(); it != doc[i].end(); it++)
                 {
-                    std::string memberName;
-                    it.first() >> memberName;
+                    std::string memberName = it->first.as<std::string>();
 
-                    std::string value;
-                    it.second() >> value;
+                    std::string value = it->second.as<std::string>();
+//                     it.second() >> value;
                     
                     instance->config.insert(std::make_pair(memberName, value));
                 }
