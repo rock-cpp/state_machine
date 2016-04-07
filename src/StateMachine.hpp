@@ -15,7 +15,7 @@ namespace state_machine
  */
 class StateMachine
 {
-  
+    bool doExecute();
 public:
     
     static StateMachine& getInstance() {

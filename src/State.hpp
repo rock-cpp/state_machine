@@ -24,6 +24,10 @@ public:
     State(const std::string &name, State *success, State *failue);
     
     virtual ~State() {};
+    /**
+     * Called only one time at startup / When a task is registered
+     * */
+    virtual void init() = 0;
     virtual void exit() = 0;
     virtual void executeFunction() = 0;
     /**

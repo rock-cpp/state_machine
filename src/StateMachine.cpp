@@ -83,18 +83,17 @@ bool StateMachine::checkPreemption(State* preemptedState)
     return preempted;
 }
 
-
-/* 
- * Runs the execute from the active state with a certain frequency. Returns if the mission is finished
- */
-bool StateMachine::execute()
+bool StateMachine::doExecute()
 {
     lastUpdate = base::Time::now();
     
     Transition *transition = currentState->checkTransitions();
 
+    bool stateChanged = false;
+    
     if(transition)
     {
+        stateChanged = true;
         transitionTriggered(transition);
         currentState->exit();
         transition->next->enterExt(currentState);
@@ -104,8 +103,6 @@ bool StateMachine::execute()
         
         currentState = transition->next;
     }
-    
-
     
     currentState->executeFunction();
 
@@ -117,6 +114,16 @@ bool StateMachine::execute()
     {
         usleep((executionStep - timePassed).toMicroseconds());
     }
+    return stateChanged;
+}
+
+
+/* 
+ * Runs the execute from the active state with a certain frequency. Returns if the mission is finished
+ */
+bool StateMachine::execute()
+{
+    doExecute();
     return false;
 }
 
@@ -257,9 +264,26 @@ void StateMachine::start(State* initState)
 
     lastUpdate = base::Time::now();
     
+    currentState->init();
+    
     currentState->enterExt(nullptr);
     
     currentState->executeFunction();
+
+    debugStream << "Waiting for Init State to finish " << std::endl;
+    
+    while(!doExecute())
+    {
+        ;
+    }
+    
+    debugStream << "Init State is done " << std::endl;
+    
+    //call init on all states
+    for(auto &p: states)
+    {
+        p.first->init();
+    }
 };
 
 }
