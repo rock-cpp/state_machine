@@ -16,6 +16,7 @@ namespace state_machine
 class StateMachine
 {
     bool doExecute();
+    bool executeTransition(Transition *transition);
 public:
     
     static StateMachine& getInstance() {

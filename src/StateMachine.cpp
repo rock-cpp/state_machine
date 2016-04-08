@@ -83,12 +83,8 @@ bool StateMachine::checkPreemption(State* preemptedState)
     return preempted;
 }
 
-bool StateMachine::doExecute()
+bool StateMachine::executeTransition(Transition *transition)
 {
-    lastUpdate = base::Time::now();
-    
-    Transition *transition = currentState->checkTransitions();
-
     bool stateChanged = false;
     
     if(transition)
@@ -103,6 +99,18 @@ bool StateMachine::doExecute()
         
         currentState = transition->next;
     }
+    
+    return stateChanged;
+}
+
+
+bool StateMachine::doExecute()
+{
+    lastUpdate = base::Time::now();
+
+    Transition *transition = currentState->checkTransitions();
+    
+    bool stateChanged = executeTransition(transition);
     
     currentState->executeFunction();
 
@@ -271,19 +279,43 @@ void StateMachine::start(State* initState)
     currentState->executeFunction();
 
     debugStream << "Waiting for Init State to finish " << std::endl;
+
+    bool initDone = false;
     
-    while(!doExecute())
+    while(!initDone)
     {
-        ;
+        Transition *transition = currentState->checkTransitions();
+
+        if(transition)
+        {
+            executeCallback();
+
+            //call init on all states
+            for(auto &p: states)
+            {
+                p.first->init();
+            }
+            
+            initDone = true;
+            
+            executeTransition(transition);
+        }
+        else
+        {
+            currentState->executeFunction();
+
+            executeCallback();
+        }
+        
+        timePassed = base::Time::now() - lastUpdate;
+        //   helper->message("Executed in " + std::to_string(timePassed.toMicroseconds()) + " µs");
+        if (timePassed < executionStep) 
+        {
+            usleep((executionStep - timePassed).toMicroseconds());
+        }
     }
     
     debugStream << "Init State is done " << std::endl;
-    
-    //call init on all states
-    for(auto &p: states)
-    {
-        p.first->init();
-    }
 };
 
 }
