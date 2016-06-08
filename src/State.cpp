@@ -39,6 +39,11 @@ State::State(const std::string& name_, State* success, State* failue) : id(State
     }
 }
 
+State::~State()
+{
+
+}
+
 void State::enterExt(const State* lastState)
 {
     hasFailed = false;

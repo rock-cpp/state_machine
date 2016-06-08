@@ -10,4 +10,10 @@ Transition::Transition(const std::string &name, State *prev, State *next, std::f
 
 }
 
+Transition::~Transition()
+{
+
+}
+
+
 }

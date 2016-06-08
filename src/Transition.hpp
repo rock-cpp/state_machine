@@ -14,7 +14,7 @@ class Transition
 {
 public:
     Transition(const std::string &name, State *prev, State *next, std::function<bool()> guard);
-    ~Transition() {};
+    ~Transition();
     State *prev;
     State *next;
     std::function<bool()> guard;

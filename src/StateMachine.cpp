@@ -14,6 +14,11 @@ StateMachine::StateMachine() : currentState(nullptr), idCounterState(0), idCount
     executeCallback = [](){};
 }
 
+StateMachine::~StateMachine()
+{
+
+}
+
 void StateMachine::registerPreemtptionState(State* state)
 {
     for (State* st : preemptionStates) {

@@ -23,7 +23,7 @@ public:
     State(const std::string &name, State *success);
     State(const std::string &name, State *success, State *failue);
     
-    virtual ~State() {};
+    virtual ~State();
     /**
      * Called only one time at startup / When a task is registered
      * */

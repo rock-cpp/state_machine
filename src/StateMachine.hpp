@@ -100,7 +100,7 @@ private:
     unsigned int idCounterState;
     unsigned int idCounterTransition;
     
-    ~StateMachine() {};
+    ~StateMachine();
     StateMachine();
     StateMachine(StateMachine const&) = delete;
     void operator=(StateMachine const&) = delete;
