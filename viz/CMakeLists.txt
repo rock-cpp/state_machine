@@ -3,6 +3,8 @@ rock_library(state_machine_viz
         StateMachineWidget.cpp
     HEADERS 
         StateMachineWidget.hpp
+    MOC
+	StateMachineWidget.hpp
     DEPS_PKGCONFIG
         QGVCore
         base-types
