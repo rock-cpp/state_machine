@@ -1,5 +1,4 @@
-#ifndef STATEMACHINEWIDGET_H
-#define STATEMACHINEWIDGET_H
+#pragma once
 
 #include <QGraphicsView>
 #include <qgv/QGVScene.h>
@@ -10,8 +9,10 @@
 
 class StateMachineWidget : public QGraphicsView
 {
+Q_OBJECT
 public:
-    StateMachineWidget();
+    StateMachineWidget(QWidget* parent = 0);
+    using QGraphicsView::update;
     
     void update(const state_machine::serialization::StateMachine &dump);   
     void update(const state_machine::serialization::Event &event);
@@ -20,13 +21,12 @@ protected:
     void wheelEvent(QWheelEvent* e);
     
 private:
-    int activeTransition;
-    int activeState;
-    std::map<unsigned int, QGVNode *> idToState;
-    std::map<unsigned int, QGVEdge *> idToTransition;
-    std::map<unsigned int, QGVSubGraph *> idToSubGraph;
+    int m_activeTransition;
+    int m_activeState;
+    std::map<unsigned int, QGVNode *> m_idToState;
+    std::map<unsigned int, QGVEdge *> m_idToTransition;
+    std::map<unsigned int, QGVSubGraph *> m_idToSubGraph;
 
-    QGVScene scene;
+    QGVScene m_scene;
 };
 
-#endif // STATEMACHINEWIDGET_H
