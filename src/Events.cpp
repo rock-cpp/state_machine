@@ -3,6 +3,11 @@
 #include "Transition.hpp"
 #include "StateMachine.hpp"
 
+bool state_machine::serialization::Serializable::isValid() const
+{
+    return std::numeric_limits<unsigned int>::max() == id;
+}
+
 state_machine::serialization::State::State(const state_machine::State& state)
 {
     name = "    " + state.getName() + "    ";
