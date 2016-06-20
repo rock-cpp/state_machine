@@ -1,6 +1,4 @@
-#ifndef EVENTS_H
-#define EVENTS_H
-
+#pragma once
 #include <limits>
 #include <string>
 #include <vector>
@@ -24,8 +22,7 @@ struct State : Serializable
     State(const ::state_machine::State &state);
     State() : Serializable(), parentId(-1) {}
     std::string name;
-    int id;
-    int parentId;
+    unsigned int parentId;
 };
 
 struct Transition : Serializable
@@ -35,12 +32,11 @@ struct Transition : Serializable
     std::string name;
     State from;
     State to;
-    unsigned int id;
 };
 
 struct StateMachine
 {
-    StateMachine() {};
+    StateMachine() {}
     StateMachine(const ::state_machine::StateMachine &sm);
     std::vector<State> allStates;
     std::vector<Transition> allTransitions;
@@ -60,4 +56,3 @@ struct Event : Serializable
 
 }
 }
-#endif // EVENTS_H
