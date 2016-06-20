@@ -1,6 +1,7 @@
 #ifndef EVENTS_H
 #define EVENTS_H
 
+#include <limits>
 #include <string>
 #include <vector>
 
@@ -11,18 +12,25 @@ namespace state_machine
     class StateMachine;
 namespace serialization
 {
-struct State 
+struct Serializable
+{
+    Serializable() : id(std::numeric_limits<unsigned int>::max()) {}
+    unsigned int id;
+    bool isValid() const;
+};
+
+struct State : Serializable
 {
     State(const ::state_machine::State &state);
-    State() : id(-1), parentId(-1) {};
+    State() : Serializable(), parentId(-1) {}
     std::string name;
     int id;
     int parentId;
 };
 
-struct Transition
+struct Transition : Serializable
 {
-    Transition() : id(-1) {};
+    Transition() : Serializable() {}
     Transition(const ::state_machine::Transition &trans);
     std::string name;
     State from;
@@ -44,10 +52,10 @@ enum EVENT_TYPE
     StateChanged,
 };
 
-struct Event
+struct Event : Serializable
 {
+    Event() : Serializable() {}
     EVENT_TYPE type;
-    unsigned int id;    
 };
 
 }
