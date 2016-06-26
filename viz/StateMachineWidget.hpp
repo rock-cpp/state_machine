@@ -9,11 +9,12 @@
 
 class StateMachineWidget : public QGraphicsView
 {
-Q_OBJECT
+    Q_OBJECT
 public:
     StateMachineWidget(QWidget* parent = 0);
     using QGraphicsView::update;
-    
+
+public slots:    
     void update(const state_machine::serialization::StateMachine &dump);   
     void update(const state_machine::serialization::Event &event);
     
