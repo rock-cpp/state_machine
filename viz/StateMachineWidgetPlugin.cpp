@@ -5,7 +5,7 @@ Q_EXPORT_PLUGIN2(StateMachineWidget, StateMachineWidgetPlugin)
 
 StateMachineWidgetPlugin::StateMachineWidgetPlugin(QObject *parent)
     : QObject(parent)
-{
+{   
     initialized = false;
 }
 

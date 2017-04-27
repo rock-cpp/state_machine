@@ -1,11 +1,16 @@
-rock_library(state_machine_viz
+
+rock_vizkit_widget(StateMachineVisualization
     SOURCES 
         StateMachineWidget.cpp
+        StateMachineWidgetPlugin.cpp
     HEADERS 
         StateMachineWidget.hpp
     MOC
-	StateMachineWidget.hpp
+        StateMachineWidget.hpp
+        StateMachineWidgetPlugin.hpp
     DEPS_PKGCONFIG
         QGVCore
         base-types
 )
+
+
