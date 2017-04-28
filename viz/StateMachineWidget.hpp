@@ -16,7 +16,15 @@ public:
 
 public slots:    
     void update(const state_machine::serialization::StateMachine &dump);   
+    void updateDump(const state_machine::serialization::StateMachine &dump)
+    {
+        update(dump);
+    };
     void update(const state_machine::serialization::Event &event);
+    void updateEvents(const state_machine::serialization::Event &event)
+    {
+        update(event);
+    };
     
 protected:
     void wheelEvent(QWheelEvent* e);
