@@ -13,77 +13,26 @@ Vizkit::UiLoader::extend_cplusplus_widget_class "StateMachineWidget" do
 
     end
 
+    def multi_value?
+        true
+    end
+    
     #called each time new data are available on the 
     #orocos port connected to the widget the name is
     #custom and can be set via register_widget_for
     def update(sample,port_name)
-        update(sample)
+        updateEvents(sample)
+    end
+
+    def updateDumpRuby(sample,port_name)
+        updateDump(sample)
     end
 end
 
 # register widget for a specific Typelib type to be 
 # accessible via rock tooling (rock-replay,...)
 # multiple register_widget_for are allowed for each widget
-puts "aaaaaaaaaaaaaaaaaaaaaaaaa\n"
-puts "aaaaaaaaaaaaaaaaaaaaaaaaa\n"
-puts "aaaaaaaaaaaaaaaaaaaaaaaaa\n"
-puts "aaaaaaaaaaaaaaaaaaaaaaaaa\n"
-puts "aaaaaaaaaaaaaaaaaaaaaaaaa\n"
-puts "aaaaaaaaaaaaaaaaaaaaaaaaa\n"
-puts "aaaaaaaaaaaaaaaaaaaaaaaaa\n"
-puts "aaaaaaaaaaaaaaaaaaaaaaaaa\n"
-puts "aaaaaaaaaaaaaaaaaaaaaaaaa\n"
-puts "aaaaaaaaaaaaaaaaaaaaaaaaa\n"
-puts "aaaaaaaaaaaaaaaaaaaaaaaaa\n"
-puts "aaaaaaaaaaaaaaaaaaaaaaaaa\n"
-puts "aaaaaaaaaaaaaaaaaaaaaaaaa\n"
-puts "aaaaaaaaaaaaaaaaaaaaaaaaa\n"
-puts "aaaaaaaaaaaaaaaaaaaaaaaaa\n"
-puts "aaaaaaaaaaaaaaaaaaaaaaaaa\n"
-puts "aaaaaaaaaaaaaaaaaaaaaaaaa\n"
-puts "aaaaaaaaaaaaaaaaaaaaaaaaa\n"
-puts "aaaaaaaaaaaaaaaaaaaaaaaaa\n"
-puts "aaaaaaaaaaaaaaaaaaaaaaaaa\n"
-puts "aaaaaaaaaaaaaaaaaaaaaaaaa\n"
-puts "aaaaaaaaaaaaaaaaaaaaaaaaa\n"
-puts "aaaaaaaaaaaaaaaaaaaaaaaaa\n"
-puts "aaaaaaaaaaaaaaaaaaaaaaaaa\n"
-puts "aaaaaaaaaaaaaaaaaaaaaaaaa\n"
-puts "aaaaaaaaaaaaaaaaaaaaaaaaa\n"
-puts "aaaaaaaaaaaaaaaaaaaaaaaaa\n"
-puts "aaaaaaaaaaaaaaaaaaaaaaaaa\n"
-puts "aaaaaaaaaaaaaaaaaaaaaaaaa\n"
-puts "aaaaaaaaaaaaaaaaaaaaaaaaa\n"
-puts "aaaaaaaaaaaaaaaaaaaaaaaaa\n"
-puts "aaaaaaaaaaaaaaaaaaaaaaaaa\n"
-puts "aaaaaaaaaaaaaaaaaaaaaaaaa\n"
-puts "aaaaaaaaaaaaaaaaaaaaaaaaa\n"
-puts "aaaaaaaaaaaaaaaaaaaaaaaaa\n"
-puts "aaaaaaaaaaaaaaaaaaaaaaaaa\n"
-puts "aaaaaaaaaaaaaaaaaaaaaaaaa\n"
-puts "aaaaaaaaaaaaaaaaaaaaaaaaa\n"
-puts "aaaaaaaaaaaaaaaaaaaaaaaaa\n"
-puts "aaaaaaaaaaaaaaaaaaaaaaaaa\n"
-puts "aaaaaaaaaaaaaaaaaaaaaaaaa\n"
-puts "aaaaaaaaaaaaaaaaaaaaaaaaa\n"
-puts "aaaaaaaaaaaaaaaaaaaaaaaaa\n"
-puts "aaaaaaaaaaaaaaaaaaaaaaaaa\n"
-puts "aaaaaaaaaaaaaaaaaaaaaaaaa\n"
-puts "aaaaaaaaaaaaaaaaaaaaaaaaa\n"
-puts "aaaaaaaaaaaaaaaaaaaaaaaaa\n"
-puts "aaaaaaaaaaaaaaaaaaaaaaaaa\n"
-puts "aaaaaaaaaaaaaaaaaaaaaaaaa\n"
-puts "aaaaaaaaaaaaaaaaaaaaaaaaa\n"
-puts "aaaaaaaaaaaaaaaaaaaaaaaaa\n"
-puts "aaaaaaaaaaaaaaaaaaaaaaaaa\n"
-puts "aaaaaaaaaaaaaaaaaaaaaaaaa\n"
-puts "aaaaaaaaaaaaaaaaaaaaaaaaa\n"
-puts "aaaaaaaaaaaaaaaaaaaaaaaaa\n"
-puts "aaaaaaaaaaaaaaaaaaaaaaaaa\n"
-puts "aaaaaaaaaaaaaaaaaaaaaaaaa\n"
-puts "aaaaaaaaaaaaaaaaaaaaaaaaa\n"
-puts "aaaaaaaaaaaaaaaaaaaaaaaaa\n"
-puts "aaaaaaaaaaaaaaaaaaaaaaaaa\n"
 Vizkit::UiLoader.register_widget_for("StateMachineWidget","/state_machine/serialization/Event",:update)
+Vizkit::UiLoader.register_widget_for("StateMachineWidget","/state_machine/serialization/StateMachine",:updateDumpRuby)
 
   
