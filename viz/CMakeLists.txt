@@ -1,5 +1,5 @@
 
-rock_vizkit_widget(StateMachineVisualization
+rock_vizkit_widget(state_machine_viz
     SOURCES 
         StateMachineWidget.cpp
         StateMachineWidgetPlugin.cpp
