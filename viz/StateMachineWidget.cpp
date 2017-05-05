@@ -92,23 +92,26 @@ void StateMachineWidget::update(const state_machine::serialization::Event &event
     }
 
     //Layout scene
-    m_scene.applyLayout();
+//     m_scene.applyLayout();
 }
 
 void StateMachineWidget::removeState(const state_machine::serialization::State& state)
 {
-    std::cout << "Removing state" << std::endl;
+    std::cout << "Removing state" << state.name << "(" << state.id << ")" << std::endl;
     
     //first check if we are connected to some edge
-    for(auto it = m_transitions.begin();it !=  m_transitions.end();it++)
+    for(auto it = m_transitions.begin();it !=  m_transitions.end();)
     {
-        if(it->from.id == state.id || it->from.id == state.id)
+        if(it->from.id == state.id || it->to.id == state.id)
         {
+            std::cout << "Removing transition " << it->name << " from " << it->from.name << "(" << it->from.id << ") to " << it->to.name << "(" << it->to.id << ")" << std::endl;
             m_scene.deleteEdge(m_idToTransition[it->id]);
             m_idToTransition.erase(it->id);
             it = m_transitions.erase(it);
-            if(it == m_transitions.end())
-                break;
+        }
+        else
+        {
+            it++;
         }
     }
     
@@ -120,14 +123,29 @@ void StateMachineWidget::removeState(const state_machine::serialization::State& 
 
 void StateMachineWidget::removeSubState(const state_machine::serialization::State& state)
 {
-    std::cout << "Removing sub state" << std::endl;
+    std::cout << "Removing sub graph" << state.name << "(" << state.id << ")" << std::endl;
+    //remove all attached states
+    for(auto it: m_idToSState)
+    {
+        if(it.second.parentId == state.id && it.second.parentId != it.second.id)
+        {
+            std::cout << "Removing child state " << it.second.name << std::endl;
+            removeState(it.second);
+        }
+    }
     
+    //Delete subgraph
+    m_scene.deleteSubGraph(m_idToSubGraph[state.id]);
+    m_idToSubGraph.erase(state.id);
+    
+    //delete state itself
+    removeState(state);
 }
 
 
 void StateMachineWidget::update(const state_machine::serialization::StateMachine& dump)
 {
-//     std::cout << "Got Dump" << std::endl;
+    std::cout << "Got Dump" << std::endl;
     bool changed = false;
     
     std::map<unsigned int, state_machine::serialization::State> idToSStateCpy = m_idToSState;
@@ -206,7 +224,7 @@ void StateMachineWidget::update(const state_machine::serialization::StateMachine
     for(const state_machine::serialization::State *state: toAddSub)
     {
         changed = true;
-        std::cout << "Adding state " << state->name << std::endl;
+        std::cout << "Adding subGraph " << state->name << std::endl;
         
         if (!m_idToSubGraph.count(state->parentId))
         {
@@ -237,6 +255,7 @@ void StateMachineWidget::update(const state_machine::serialization::StateMachine
             {
                 throw std::runtime_error("State to add exists");                
             }
+            std::cout << " to parent " << m_idToSState[state->parentId].name << std::endl;
             m_idToState[state->id] = m_idToSubGraph[state->parentId]->addNode(QString::fromStdString(state->name));
             m_idToSState[state->id] = *state;
             
@@ -255,7 +274,19 @@ void StateMachineWidget::update(const state_machine::serialization::StateMachine
             std::cout << "Adding transition " << tr.name << std::endl;
             changed = true;
 
+            if(!m_idToState.count(tr.from.id))
+            {
+                std::cout <<"Fishy transition, from id " << tr.from.id << " does not exist" << std::endl;
+                continue;
+            }
+            if(!m_idToState.count(tr.to.id))
+            {
+                std::cout <<"Fishy transition, to id " << tr.to.id << " does not exist" << std::endl;
+                continue;
+            }
+            
             m_idToTransition[tr.id] = m_scene.addEdge(m_idToState[tr.from.id], m_idToState[tr.to.id], QString::fromStdString(tr.name));
+            m_transitions.push_back(tr);
         }
     }
 
