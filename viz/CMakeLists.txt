@@ -14,3 +14,5 @@ rock_vizkit_widget(state_machine_viz
 )
 
 
+rock_executable(vizTest vizTest.cpp
+    DEPS state_machine_viz)
