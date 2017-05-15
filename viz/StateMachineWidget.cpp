@@ -45,12 +45,11 @@ void StateMachineWidget::setDefaultAttributes()
 
 void StateMachineWidget::update(const state_machine::serialization::Event &event)
 {
-    return;
     switch(event.type)
     {
     case state_machine::serialization::StateChanged:
     {
-        if(m_activeState >= 0)
+        if(m_activeState >= 0 && m_idToQGVNode.count(m_activeState))
         {
             m_idToQGVNode[m_activeState]->setAttribute("color", "black");
             m_idToQGVNode[m_activeState]->setAttribute("fillcolor", "#806969");
@@ -73,7 +72,7 @@ void StateMachineWidget::update(const state_machine::serialization::Event &event
     break;
     case state_machine::serialization::TransitionTriggered:
     {
-        if(m_activeTransition >= 0)
+        if(m_activeTransition >= 0 && m_idToQGVEdge.count(m_activeTransition))
         {
             m_idToQGVEdge[m_activeTransition]->setAttribute("color", "black");
             m_idToQGVEdge[m_activeTransition]->setAttribute("arrowsize", "1.2");
@@ -94,7 +93,7 @@ void StateMachineWidget::update(const state_machine::serialization::Event &event
     }
 
     //Layout scene
-//     m_scene.applyLayout();
+    m_scene.applyLayout();
 }
 
 void StateMachineWidget::removeState(const state_machine::serialization::State& state)
