@@ -11,6 +11,7 @@
 #include <boost/concept_check.hpp>
 #include <time.h>
 #include <stdlib.h>
+#include <functional>
 
 StateMachineWidget::StateMachineWidget(QWidget* parent)
   : QGraphicsView(parent)
@@ -44,23 +45,24 @@ void StateMachineWidget::setDefaultAttributes()
 
 void StateMachineWidget::update(const state_machine::serialization::Event &event)
 {
+    return;
     switch(event.type)
     {
     case state_machine::serialization::StateChanged:
     {
         if(m_activeState >= 0)
         {
-            m_idToState[m_activeState]->setAttribute("color", "black");
-            m_idToState[m_activeState]->setAttribute("fillcolor", "#806969");
+            m_idToQGVNode[m_activeState]->setAttribute("color", "black");
+            m_idToQGVNode[m_activeState]->setAttribute("fillcolor", "#806969");
         }
 
-        auto s = m_idToState.find(event.id);
-        if(s != m_idToState.end())
+        auto s = m_idToQGVNode.find(event.id);
+        if(s != m_idToQGVNode.end())
         {
             m_activeState = event.id;
-            m_idToState[m_activeState]->setAttribute("color", "black");
-            m_idToState[m_activeState]->setAttribute("fillcolor", "yellow");
-            m_idToState[m_activeState]->setFocus();
+            m_idToQGVNode[m_activeState]->setAttribute("color", "black");
+            m_idToQGVNode[m_activeState]->setAttribute("fillcolor", "yellow");
+            m_idToQGVNode[m_activeState]->setFocus();
 
         }
         else
@@ -73,15 +75,15 @@ void StateMachineWidget::update(const state_machine::serialization::Event &event
     {
         if(m_activeTransition >= 0)
         {
-            m_idToTransition[m_activeTransition]->setAttribute("color", "black");
-            m_idToTransition[m_activeTransition]->setAttribute("arrowsize", "1.2");
+            m_idToQGVEdge[m_activeTransition]->setAttribute("color", "black");
+            m_idToQGVEdge[m_activeTransition]->setAttribute("arrowsize", "1.2");
         }
-        auto trans = m_idToTransition.find(event.id);
-        if(trans != m_idToTransition.end())
+        auto trans = m_idToQGVEdge.find(event.id);
+        if(trans != m_idToQGVEdge.end())
         {
             m_activeTransition = event.id;
-            m_idToTransition[m_activeTransition]->setAttribute("color", "red");
-            m_idToTransition[m_activeTransition]->setAttribute("arrowsize", "2.0");
+            m_idToQGVEdge[m_activeTransition]->setAttribute("color", "red");
+            m_idToQGVEdge[m_activeTransition]->setAttribute("arrowsize", "2.0");
         }                    
         else
         {
@@ -100,14 +102,15 @@ void StateMachineWidget::removeState(const state_machine::serialization::State& 
     std::cout << "Removing state" << state.name << "(" << state.id << ")" << std::endl;
     
     //first check if we are connected to some edge
-    for(auto it = m_transitions.begin();it !=  m_transitions.end();)
+    for(auto it = m_idToTransitions.begin();it !=  m_idToTransitions.end();)
     {
-        if(it->from.id == state.id || it->to.id == state.id)
+        const auto &tr(it->second);
+        if(tr.from.id == state.id || tr.to.id == state.id)
         {
-            std::cout << "Removing transition " << it->name << " from " << it->from.name << "(" << it->from.id << ") to " << it->to.name << "(" << it->to.id << ")" << std::endl;
-            m_scene.deleteEdge(m_idToTransition[it->id]);
-            m_idToTransition.erase(it->id);
-            it = m_transitions.erase(it);
+            std::cout << "Removing transition " << tr.name << " from " << tr.from.name << "(" << tr.from.id << ") to " << tr.to.name << "(" << tr.to.id << ")" << std::endl;
+            m_scene.deleteEdge(m_idToQGVEdge[tr.id]);
+            m_idToQGVEdge.erase(tr.id);
+            it = m_idToTransitions.erase(it);
         }
         else
         {
@@ -115,17 +118,17 @@ void StateMachineWidget::removeState(const state_machine::serialization::State& 
         }
     }
     
-    m_scene.deleteNode(m_idToState[state.id]);
-    m_idToState.erase(state.id);    
-    m_idToSState.erase(state.id);
+    m_scene.deleteNode(m_idToQGVNode[state.id]);
+    m_idToQGVNode.erase(state.id);    
+    m_idToChildState.erase(state.id);
     
 }
 
-void StateMachineWidget::removeSubState(const state_machine::serialization::State& state)
+void StateMachineWidget::removeParentState(const state_machine::serialization::State& state)
 {
     std::cout << "Removing sub graph" << state.name << "(" << state.id << ")" << std::endl;
     //remove all attached states
-    for(auto it: m_idToSState)
+    for(auto it: m_idToChildState)
     {
         if(it.second.parentId == state.id && it.second.parentId != it.second.id)
         {
@@ -135,98 +138,87 @@ void StateMachineWidget::removeSubState(const state_machine::serialization::Stat
     }
     
     //Delete subgraph
-    m_scene.deleteSubGraph(m_idToSubGraph[state.id]);
-    m_idToSubGraph.erase(state.id);
+    m_scene.deleteSubGraph(m_idToQGVSubGraph[state.id]);
+    m_idToQGVSubGraph.erase(state.id);
+    m_idToParentState.erase(state.id);
     
     //delete state itself
     removeState(state);
 }
 
+bool checkUpdate(const std::map<unsigned int, state_machine::serialization::State> &idToState, 
+                 const std::vector<state_machine::serialization::State> &newStates,
+                 std::function<void (const state_machine::serialization::State &)> removeFunc,
+                 std::function<void (const state_machine::serialization::State *)> addFunc
+                )
+{
+    std::map<unsigned int, state_machine::serialization::State> deletionList = idToState;
+    std::vector<const state_machine::serialization::State *> addList;
+    
+    bool changed = false;
+    
+    for(const state_machine::serialization::State &state: newStates)
+    {
+        bool add = true;
+        if(idToState.count(state.id))
+        {
+            const state_machine::serialization::State &oldState(idToState.at(state.id));
+            if(state == oldState)
+            {
+                //state is registered, remove from the deletion list
+                deletionList.erase(state.id);
+                add = false;
+            }
+            //else state is different, keep it in the deletion list for deletion and readd the new state
+        }
+
+        if(add)
+        {
+            addList.push_back(&state);
+        }
+    }
+    
+    //delete all states, that are not metioned any more in the new dump
+    for(const auto &it: deletionList)
+    {
+        changed = true;
+        removeFunc(it.second);
+    }
+
+    for(const state_machine::serialization::State *state: addList)
+    {
+        changed = true;
+        addFunc(state);
+    }
+    
+    return changed;
+}
 
 void StateMachineWidget::update(const state_machine::serialization::StateMachine& dump)
 {
     std::cout << "Got Dump" << std::endl;
     bool changed = false;
     
-    std::map<unsigned int, state_machine::serialization::State> idToSStateCpy = m_idToSState;
-    std::map<unsigned int, const state_machine::serialization::State*>  idToSerState;
-    
-    std::vector<const state_machine::serialization::State *> toAddSub;
-    std::vector<const state_machine::serialization::State *> toAdd;
+    std::vector<state_machine::serialization::State> parentStates;
+    std::vector<state_machine::serialization::State> childStates;
 
-    //first we check for all substates
-    for(const state_machine::serialization::State &state: dump.allStates)
-    {
-        idToSerState[state.id] = &state;
-
-        if(state.parentId != state.id)
-            continue;
-        
-        bool add = true;
-        if(m_idToSState.count(state.id))
-        {
-            const state_machine::serialization::State &oldState(m_idToSState[state.id]);
-            if(state.name != oldState.name || state.parentId != oldState.parentId)
-            {
-                removeSubState(oldState);
-            }
-            else
-            {
-                add = false;
-            }
-            
-            //state is registered, remove from the deletion list
-            idToSStateCpy.erase(state.id);
-        }
-
-        if(add)
-        {
-            toAddSub.push_back(&state);
-        }
-    }
-
-    //now that all states of the substates might have been deleted, we check the normal states
     for(const state_machine::serialization::State &state: dump.allStates)
     {
         if(state.parentId == state.id)
-            continue;
-        
-        bool add = true;
-        if(m_idToSState.count(state.id))
         {
-            const state_machine::serialization::State &oldState(m_idToSState[state.id]);
-            if(state.name != oldState.name || state.parentId != oldState.parentId)
-            {
-                removeState(oldState);
-            }
-            else
-            {
-                add = false;
-            }
-            
-            //state is registered, remove from the deletion list
-            idToSStateCpy.erase(state.id);
+            parentStates.push_back(state);
+        }
+        else
+        {
+            childStates.push_back(state);
         }
 
-        if(add)
-        {
-            toAdd.push_back(&state);
-        }
     }
     
-    //delete all states, that are not metioned any more in the new dump
-    for(const auto &it: idToSStateCpy)
-    {
-        removeState(it.second);
-    }
-    
-    
-    for(const state_machine::serialization::State *state: toAddSub)
-    {
-        changed = true;
+    changed |= checkUpdate(m_idToParentState, parentStates, std::bind(&StateMachineWidget::removeParentState, this, std::placeholders::_1), [&](const state_machine::serialization::State *state){
         std::cout << "Adding subGraph " << state->name << std::endl;
         
-        if (!m_idToSubGraph.count(state->parentId))
+        if (!m_idToQGVSubGraph.count(state->parentId))
         {
             if(state->id != state->parentId)
             {
@@ -235,59 +227,77 @@ void StateMachineWidget::update(const state_machine::serialization::StateMachine
             QGVSubGraph *subGraph = m_scene.addSubGraph(QString::fromStdString(state->name + std::to_string(state->id)), true);
             subGraph->setAttribute(QString::fromStdString("pin"), QString::fromStdString("true"));
             subGraph->setAttribute(QString::fromStdString("label"), QString::fromStdString(state->name));
-            m_idToSubGraph[state->parentId] = subGraph;
-            m_idToState[state->id] = m_scene.addNode(QString::fromStdString(state->name));
-            m_idToSState[state->id] = *state;
+            m_idToQGVSubGraph[state->parentId] = subGraph;
+            m_idToQGVNode[state->id] = m_scene.addNode(QString::fromStdString(state->name));
+            m_idToParentState[state->id] = *state;
         }
         else
         {
             throw std::runtime_error("Parent State to add exists");
         }
-    }
 
-    for(const state_machine::serialization::State *state: toAdd)
-    {
-        changed = true;
+    });
+
+    changed |= checkUpdate(m_idToChildState, childStates, std::bind(&StateMachineWidget::removeState, this, std::placeholders::_1), [&](const state_machine::serialization::State *state){ 
         std::cout << "Adding state " << state->name << std::endl;
         
         if (state->id != state->parentId) {
-            if(m_idToState.count(state->id))
+            if(m_idToQGVNode.count(state->id))
             {
                 throw std::runtime_error("State to add exists");                
             }
-            std::cout << " to parent " << m_idToSState[state->parentId].name << std::endl;
-            m_idToState[state->id] = m_idToSubGraph[state->parentId]->addNode(QString::fromStdString(state->name));
-            m_idToSState[state->id] = *state;
+            std::cout << " to parent " << m_idToParentState[state->parentId].name << std::endl;
+            m_idToQGVNode[state->id] = m_idToQGVSubGraph[state->parentId]->addNode(QString::fromStdString(state->name));
+            m_idToChildState[state->id] = *state;
             
         } else {
             throw std::runtime_error("Expected child state, got parent");
         }
-    }
+    });
 
-    std::map<unsigned int, QGVEdge *> idToTransitionCpy;
-
+    std::map<unsigned int, state_machine::serialization::Transition> deleteList = m_idToTransitions;
     
     for(auto &tr: dump.allTransitions)
     {
-        if(!m_idToTransition.count(tr.id))
+        auto it = m_idToTransitions.find(tr.id);
+        if(it != m_idToTransitions.end())
         {
-            std::cout << "Adding transition " << tr.name << std::endl;
-            changed = true;
-
-            if(!m_idToState.count(tr.from.id))
+            if(it->second == tr)
             {
-                std::cout <<"Fishy transition, from id " << tr.from.id << " does not exist" << std::endl;
-                continue;
+                deleteList.erase(tr.id);
             }
-            if(!m_idToState.count(tr.to.id))
+        }
+        else
+        {
+            //new transition, add it
+            std::cout << "Adding transition " << tr.name << "("<< tr.id << ")" << std::endl;
+            changed = true;
+            
+            if(!m_idToQGVNode.count(tr.from.id))
             {
-                std::cout <<"Fishy transition, to id " << tr.to.id << " does not exist" << std::endl;
-                continue;
+                std::cout << "Error, transition source not there (" << tr.from.id << ")"  << std::endl;
+            }
+                
+            if(!m_idToQGVNode.count(tr.to.id))
+            {
+                std::cout << "Error, transition goal not there (" << tr.to.id << ")"  << std::endl;
             }
             
-            m_idToTransition[tr.id] = m_scene.addEdge(m_idToState[tr.from.id], m_idToState[tr.to.id], QString::fromStdString(tr.name));
-            m_transitions.push_back(tr);
+            m_idToQGVEdge[tr.id] = m_scene.addEdge(m_idToQGVNode[tr.from.id], m_idToQGVNode[tr.to.id], QString::fromStdString(tr.name));
+            m_idToTransitions[tr.id] = tr;
         }
+    }
+    
+    for(auto &it: deleteList)
+    {
+        if(!m_idToQGVEdge.count(it.second.id))
+        {
+            throw std::runtime_error("Transition to delete does not exist");
+        }
+        std::cout << "Deleting transition " << it.second.name << "("<< it.second.id << ")" << std::endl;
+        m_scene.deleteEdge(m_idToQGVEdge.at(it.second.id));
+        m_idToTransitions.erase(it.first);
+        changed = true;
     }
 
     if(changed)

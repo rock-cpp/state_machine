@@ -8,6 +8,8 @@ rock_vizkit_widget(state_machine_viz
     MOC
         StateMachineWidget.hpp
         StateMachineWidgetPlugin.hpp
+    DEPS
+        state_machine
     DEPS_PKGCONFIG
         QGVCore
         base-types

@@ -21,6 +21,8 @@ struct State : Serializable
 {
     State(const ::state_machine::State &state);
     State() : Serializable(), parentId(-1) {}
+
+    bool operator==(const State &other) const;
     std::string name;
     unsigned int parentId;
 };
@@ -29,6 +31,9 @@ struct Transition : Serializable
 {
     Transition() : Serializable() {}
     Transition(const ::state_machine::Transition &trans);
+    
+    bool operator==(const Transition &other) const;
+    
     std::string name;
     State from;
     State to;

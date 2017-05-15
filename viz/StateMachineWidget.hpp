@@ -32,17 +32,18 @@ protected:
     void setDefaultAttributes();
     
     void removeState(const state_machine::serialization::State &state);
-    void removeSubState(const state_machine::serialization::State &state);
+    void removeParentState(const state_machine::serialization::State &state);
     
 private:
     int m_activeTransition;
     int m_activeState;
-    std::map<unsigned int, QGVNode *> m_idToState;
-    std::map<unsigned int, QGVEdge *> m_idToTransition;
-    std::map<unsigned int, QGVSubGraph *> m_idToSubGraph;
+    std::map<unsigned int, QGVNode *> m_idToQGVNode;
+    std::map<unsigned int, QGVEdge *> m_idToQGVEdge;
+    std::map<unsigned int, QGVSubGraph *> m_idToQGVSubGraph;
 
-    std::map<unsigned int, state_machine::serialization::State> m_idToSState;
-    std::vector<state_machine::serialization::Transition> m_transitions;
+    std::map<unsigned int, state_machine::serialization::State> m_idToParentState;
+    std::map<unsigned int, state_machine::serialization::State> m_idToChildState;
+    std::map<unsigned int, state_machine::serialization::Transition> m_idToTransitions;
     
     QGVScene m_scene;
 };

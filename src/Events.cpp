@@ -17,8 +17,11 @@ state_machine::serialization::State::State(const state_machine::State& state)
     } else {
         parentId = state.getParentState()->getId();
     }
-    
-    
+}
+
+bool state_machine::serialization::State::operator==(const state_machine::serialization::State& other) const
+{
+    return (name == other.name) && (other.id == id) && (parentId == other.parentId);
 }
 
 state_machine::serialization::Transition::Transition(const state_machine::Transition& trans)
@@ -37,6 +40,13 @@ state_machine::serialization::Transition::Transition(const state_machine::Transi
     
     id = trans.getId();
 }
+
+bool state_machine::serialization::Transition::operator==(const state_machine::serialization::Transition& other) const
+{
+    return (other.id == id) && (other.name == name) 
+           && (other.to == to) && (other.from == from);
+}
+
 
 state_machine::serialization::StateMachine::StateMachine(const state_machine::StateMachine& sm)
 {
