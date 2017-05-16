@@ -5,7 +5,6 @@
 #include <state_machine/Events.hpp>
 #include <map>
 #include <qevent.h>
-#include <graph_analysis/gui/BaseGraphView/BaseGraphView.hpp>
 
 class StateMachineWidget : public QGraphicsView
 {
