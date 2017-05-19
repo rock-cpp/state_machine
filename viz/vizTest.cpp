@@ -1,5 +1,5 @@
 #include <QApplication>
-#include <state_machine/StateMachineWidget.hpp>
+#include "StateMachineWidget.hpp"
 
 int main(int argc, char** argv)
 {
