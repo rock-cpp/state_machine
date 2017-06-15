@@ -127,9 +127,19 @@ void StateMachineWidget::removeParentState(const state_machine::serialization::S
 {
     std::cout << "Removing sub graph" << state.name << "(" << state.id << ")" << std::endl;
     //remove all attached states
-    for(auto it: m_idToChildState)
+    for (auto it: m_idToParentState)
     {
-        if(it.second.parentId == state.id && it.second.parentId != it.second.id)
+        std::cout << "check " << it.second.name << ", id=" << std::to_string(it.second.id) << ", parent=" << std::to_string(it.second.parentId) << std::endl;
+        if (it.second.id != state.id && it.second.parentId == state.id)
+        {
+            std::cout << "Removing parent state " << it.second.name << std::endl;
+            removeParentState(it.second);
+        }
+    }
+    
+    for (auto it: m_idToChildState)
+    {
+        if (it.second.parentId == state.id && it.second.parentId != it.second.id)
         {
             std::cout << "Removing child state " << it.second.name << std::endl;
             removeState(it.second);
@@ -203,31 +213,41 @@ void StateMachineWidget::update(const state_machine::serialization::StateMachine
 
     for(const state_machine::serialization::State &state: dump.allStates)
     {
-        if(state.parentId == state.id)
+        // check if state is its on parent OR parent of an onther state
+        if (state.parentId == state.id
+            || std::find_if(dump.allStates.begin(), dump.allStates.end(), [&state] (const state_machine::serialization::State& s) { return s.parentId == state.id; }) !=  dump.allStates.end())
         {
             parentStates.push_back(state);
+            std::cout << "add parent state " << state.name << " id=" << std::to_string(state.id) << ", parent=" << std::to_string(state.parentId) << std::endl;
         }
         else
         {
             childStates.push_back(state);
         }
-
     }
     
     changed |= checkUpdate(m_idToParentState, parentStates, std::bind(&StateMachineWidget::removeParentState, this, std::placeholders::_1), [&](const state_machine::serialization::State *state){
         std::cout << "Adding subGraph " << state->name << std::endl;
         
-        if (!m_idToQGVSubGraph.count(state->parentId))
+        if (!m_idToQGVSubGraph.count(state->id))
         {
-            if(state->id != state->parentId)
-            {
-                throw std::runtime_error("Expected parent state, got child state");
-            }
             QGVSubGraph *subGraph = m_scene.addSubGraph(QString::fromStdString(state->name + std::to_string(state->id)), true);
+            
             subGraph->setAttribute(QString::fromStdString("pin"), QString::fromStdString("true"));
             subGraph->setAttribute(QString::fromStdString("label"), QString::fromStdString(state->name));
-            m_idToQGVSubGraph[state->parentId] = subGraph;
-            m_idToQGVNode[state->id] = m_scene.addNode(QString::fromStdString(state->name));
+            m_idToQGVSubGraph[state->id] = subGraph;
+            
+            // case: state is parent of an other node
+            if (state->parentId != state->id)
+            {
+                m_idToQGVNode[state->id] = subGraph->addNode(QString::fromStdString(state->name));
+            }
+            // case: state is parent of itself
+            else
+            {
+                m_idToQGVNode[state->id] = m_scene.addNode(QString::fromStdString(state->name));
+            }
+            
             m_idToParentState[state->id] = *state;
         }
         else
@@ -245,7 +265,6 @@ void StateMachineWidget::update(const state_machine::serialization::StateMachine
             {
                 throw std::runtime_error("State to add exists");                
             }
-            std::cout << " to parent " << m_idToParentState[state->parentId].name << std::endl;
             m_idToQGVNode[state->id] = m_idToQGVSubGraph[state->parentId]->addNode(QString::fromStdString(state->name));
             m_idToChildState[state->id] = *state;
             
