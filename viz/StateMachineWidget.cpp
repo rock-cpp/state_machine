@@ -213,9 +213,9 @@ void StateMachineWidget::update(const state_machine::serialization::StateMachine
 
     for(const state_machine::serialization::State &state: dump.allStates)
     {
+        std::cout << "  got state id=" << std::to_string(state.id) << ", parent=" << std::to_string(state.parentId) << ", name=" << state.name << std::endl;
         // check if state is its on parent OR parent of an onther state
-        if (state.parentId == state.id
-            || std::find_if(dump.allStates.begin(), dump.allStates.end(), [&state] (const state_machine::serialization::State& s) { return s.parentId == state.id; }) !=  dump.allStates.end())
+        if (std::find_if(dump.allStates.begin(), dump.allStates.end(), [&state] (const state_machine::serialization::State& s) { return s.parentId == state.id; }) != dump.allStates.end())
         {
             parentStates.push_back(state);
             std::cout << "add parent state " << state.name << " id=" << std::to_string(state.id) << ", parent=" << std::to_string(state.parentId) << std::endl;
@@ -231,18 +231,36 @@ void StateMachineWidget::update(const state_machine::serialization::StateMachine
         
         if (!m_idToQGVSubGraph.count(state->id))
         {
-            QGVSubGraph *subGraph = m_scene.addSubGraph(QString::fromStdString(state->name + std::to_string(state->id)), true);
-            
-            subGraph->setAttribute(QString::fromStdString("pin"), QString::fromStdString("true"));
-            subGraph->setAttribute(QString::fromStdString("label"), QString::fromStdString(state->name));
-            m_idToQGVSubGraph[state->id] = subGraph;
+            QGVSubGraph *subGraph = nullptr;
             
             // case: state is parent of an other node
             if (state->parentId != state->id)
             {
-                m_idToQGVNode[state->id] = subGraph->addNode(QString::fromStdString(state->name));
+                if (!m_idToQGVSubGraph.count(state->parentId))
+                {
+                    std::cout << "cound not find a subgraph for state with id=" << std::to_string(state->id) << " and parentId=" << std::to_string(state->parentId) << ".." << std::endl;
+                    return;
+                }
+                
+                subGraph = m_idToQGVSubGraph[state->parentId]->addSubGraph(QString::fromStdString(state->name + std::to_string(state->id)), true);
             }
             // case: state is parent of itself
+            else
+            {
+                if (std::find_if(dump.allStates.begin(), dump.allStates.end(), [state] (const state_machine::serialization::State &s) { return s.parentId == state->id && s.id != state->id; }) != dump.allStates.end())
+                {
+                    subGraph = m_scene.addSubGraph(QString::fromStdString(state->name + std::to_string(state->id)), true);
+                }
+            }
+            
+            if (subGraph)
+            {
+                m_idToQGVNode[state->id] = subGraph->addNode(QString::fromStdString(state->name));
+                
+                subGraph->setAttribute(QString::fromStdString("pin"), QString::fromStdString("true"));
+                subGraph->setAttribute(QString::fromStdString("label"), QString::fromStdString(state->name));
+                m_idToQGVSubGraph[state->id] = subGraph;
+            }
             else
             {
                 m_idToQGVNode[state->id] = m_scene.addNode(QString::fromStdString(state->name));
