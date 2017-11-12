@@ -79,6 +79,7 @@ public:
     
     bool checkPreemption(State* preemptedState);
     void executePreemption();
+    const std::queue<State*> &getPreemptingStates();
     
     State* getStateByName(std::string name);
     

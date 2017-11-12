@@ -30,6 +30,10 @@ void StateMachine::registerPreemtptionState(State* state)
     return;
 }
 
+const std::queue< State* >& StateMachine::getPreemptingStates()
+{
+    return preemptingStates;
+}
 
 /**
  * Executes preemtion, checkPreemption has to be run first, returns value of executeSubState for every preemptingState as a map State*,bool
