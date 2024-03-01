@@ -15,9 +15,9 @@ rock_library(state_machine
     DEPS_PKGCONFIG 
         base-types
         yaml-cpp
-    DEPS_PLAIN 
-        Boost_SYSTEM Boost_FILESYSTEM 
-
+    DEPS
+        Boost::system
+        Boost::filesystem
 )
 
 rock_executable(state_machine_bin Main.cpp
