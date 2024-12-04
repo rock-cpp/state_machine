@@ -1,7 +1,9 @@
 
 rock_find_qt4(OPTIONAL)
 
-if(ROCK_QT_VERSION_4)
+pkg_check_modules(QGVCore OPTIONAL QGVCore)
+
+if(ROCK_QT_VERSION_4 AND QGVCore_FOUND)
     rock_vizkit_widget(state_machine_viz
         SOURCES
             StateMachineWidget.cpp
